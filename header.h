@@ -102,6 +102,7 @@ const char *getOsName();
 string getUsername();
 string getHostname();
 map<string, int> getProcessCounts();
+float getCPUUsage();
 
 // student TODO : memory and processes
 
