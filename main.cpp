@@ -56,6 +56,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Text("User: %s", getUsername().c_str());
     ImGui::Text("Hostname: %s", getHostname().c_str());
     ImGui::Text("CPU: %s", CPUinfo().c_str());
+    ImGui::Text("CPU Usage: %.1f%%", getCPUUsage());
     
     ImGui::Spacing();
     ImGui::Text("Process Information");
