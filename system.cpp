@@ -1,5 +1,36 @@
 #include "header.h"
 
+// Get CPU usage percentage
+float getCPUUsage() {
+    static CPUStats prev_stats = {0};
+    CPUStats curr_stats = {0};
+    
+    ifstream stat_file("/proc/stat");
+    if (!stat_file.is_open()) return 0.0f;
+    
+    string line;
+    getline(stat_file, line);
+    
+    sscanf(line.c_str(), "cpu %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld",
+           &curr_stats.user, &curr_stats.nice, &curr_stats.system, &curr_stats.idle,
+           &curr_stats.iowait, &curr_stats.irq, &curr_stats.softirq, &curr_stats.steal,
+           &curr_stats.guest, &curr_stats.guestNice);
+    
+    long long prev_idle = prev_stats.idle + prev_stats.iowait;
+    long long curr_idle = curr_stats.idle + curr_stats.iowait;
+    
+    long long prev_total = prev_stats.user + prev_stats.nice + prev_stats.system + prev_idle;
+    long long curr_total = curr_stats.user + curr_stats.nice + curr_stats.system + curr_idle;
+    
+    long long total_diff = curr_total - prev_total;
+    long long idle_diff = curr_idle - prev_idle;
+    
+    prev_stats = curr_stats;
+    
+    if (total_diff == 0) return 0.0f;
+    return (float)(total_diff - idle_diff) * 100.0f / total_diff;
+}
+
 // Get current logged in user
 string getUsername() {
     char* username = getlogin();
