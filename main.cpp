@@ -48,7 +48,27 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetWindowSize(id, size);
     ImGui::SetWindowPos(id, position);
 
-    // student TODO : add code here for the system window
+    // System Information
+    ImGui::Text("System Information");
+    ImGui::Separator();
+    
+    ImGui::Text("OS: %s", getOsName());
+    ImGui::Text("User: %s", getUsername().c_str());
+    ImGui::Text("Hostname: %s", getHostname().c_str());
+    ImGui::Text("CPU: %s", CPUinfo().c_str());
+    
+    ImGui::Spacing();
+    ImGui::Text("Process Information");
+    ImGui::Separator();
+    
+    map<string, int> processes = getProcessCounts();
+    ImGui::Text("Running: %d", processes["running"]);
+    ImGui::Text("Sleeping: %d", processes["sleeping"]);
+    ImGui::Text("Stopped: %d", processes["stopped"]);
+    ImGui::Text("Zombie: %d", processes["zombie"]);
+    
+    int total = processes["running"] + processes["sleeping"] + processes["stopped"] + processes["zombie"];
+    ImGui::Text("Total: %d", total);
 
     ImGui::End();
 }
