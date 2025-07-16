@@ -103,6 +103,7 @@ string getUsername();
 string getHostname();
 map<string, int> getProcessCounts();
 float getCPUUsage();
+long getSystemUptime();
 
 // student TODO : memory and processes
 
