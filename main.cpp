@@ -66,6 +66,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     
     vector<float> loads = getLoadAverage();
     ImGui::Text("Load: %.2f %.2f %.2f", loads[0], loads[1], loads[2]);
+    ImGui::Text("CPU Temp: %.1f°C", getCPUTemperature());
     
     ImGui::Spacing();
     ImGui::Text("Process Information");
