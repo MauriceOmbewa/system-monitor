@@ -41,6 +41,16 @@ long getSystemUptime() {
     return (long)uptime;
 }
 
+// Get system load averages
+vector<float> getLoadAverage() {
+    vector<float> loads(3, 0.0f);
+    ifstream loadavg_file("/proc/loadavg");
+    if (!loadavg_file.is_open()) return loads;
+    
+    loadavg_file >> loads[0] >> loads[1] >> loads[2];
+    return loads;
+}
+
 // Get current logged in user
 string getUsername() {
     char* username = getlogin();
