@@ -58,6 +58,12 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Text("CPU: %s", CPUinfo().c_str());
     ImGui::Text("CPU Usage: %.1f%%", getCPUUsage());
     
+    long uptime = getSystemUptime();
+    int days = uptime / 86400;
+    int hours = (uptime % 86400) / 3600;
+    int minutes = (uptime % 3600) / 60;
+    ImGui::Text("Uptime: %dd %dh %dm", days, hours, minutes);
+    
     ImGui::Spacing();
     ImGui::Text("Process Information");
     ImGui::Separator();
