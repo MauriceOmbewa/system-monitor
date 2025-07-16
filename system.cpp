@@ -31,6 +31,16 @@ float getCPUUsage() {
     return (float)(total_diff - idle_diff) * 100.0f / total_diff;
 }
 
+// Get system uptime in seconds
+long getSystemUptime() {
+    ifstream uptime_file("/proc/uptime");
+    if (!uptime_file.is_open()) return 0;
+    
+    double uptime;
+    uptime_file >> uptime;
+    return (long)uptime;
+}
+
 // Get current logged in user
 string getUsername() {
     char* username = getlogin();
