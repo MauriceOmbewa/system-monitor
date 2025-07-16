@@ -64,6 +64,9 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     int minutes = (uptime % 3600) / 60;
     ImGui::Text("Uptime: %dd %dh %dm", days, hours, minutes);
     
+    vector<float> loads = getLoadAverage();
+    ImGui::Text("Load: %.2f %.2f %.2f", loads[0], loads[1], loads[2]);
+    
     ImGui::Spacing();
     ImGui::Text("Process Information");
     ImGui::Separator();
