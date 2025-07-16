@@ -51,6 +51,16 @@ vector<float> getLoadAverage() {
     return loads;
 }
 
+// Get CPU temperature from thermal zones
+float getCPUTemperature() {
+    ifstream temp_file("/sys/class/thermal/thermal_zone0/temp");
+    if (!temp_file.is_open()) return 0.0f;
+    
+    int temp_millidegrees;
+    temp_file >> temp_millidegrees;
+    return temp_millidegrees / 1000.0f;
+}
+
 // Get current logged in user
 string getUsername() {
     char* username = getlogin();
