@@ -104,6 +104,7 @@ string getHostname();
 map<string, int> getProcessCounts();
 float getCPUUsage();
 long getSystemUptime();
+vector<float> getLoadAverage();
 
 // student TODO : memory and processes
 
