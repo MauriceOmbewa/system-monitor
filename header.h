@@ -105,6 +105,7 @@ map<string, int> getProcessCounts();
 float getCPUUsage();
 long getSystemUptime();
 vector<float> getLoadAverage();
+float getCPUTemperature();
 
 // student TODO : memory and processes
 
