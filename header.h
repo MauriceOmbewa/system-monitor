@@ -13,8 +13,13 @@
 // lib to read from file
 #include <fstream>
 // for the name of the computer and the logged in user
+#ifdef _WIN32
+#include <windows.h>
+#include <lmcons.h>  // For UNLEN
+#else
 #include <unistd.h>
 #include <limits.h>
+#endif
 // this is for us to get the cpu information
 // mostly in unix system
 // not sure if it will work in windows

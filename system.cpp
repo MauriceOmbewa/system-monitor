@@ -63,15 +63,51 @@ float getCPUTemperature() {
 
 // Get current logged in user
 string getUsername() {
+#ifdef _WIN32
+    // Windows implementation
+    char username[UNLEN + 1];
+    DWORD username_len = UNLEN + 1;
+    if (GetUserName(username, &username_len)) {
+        return string(username);
+    }
+#else
+    // POSIX implementation (Linux, macOS, etc.)
     char* username = getlogin();
-    return username ? string(username) : "unknown";
+    if (username) {
+        return string(username);
+    }
+    
+    // Fallback to environment variable if getlogin() fails
+    username = getenv("USER");
+    if (username) {
+        return string(username);
+    }
+    
+    username = getenv("LOGNAME");
+    if (username) {
+        return string(username);
+    }
+#endif
+    return "unknown";
 }
 
 // Get computer hostname
 string getHostname() {
+#ifdef _WIN32
+    // Windows implementation
+    char hostname[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD hostname_len = MAX_COMPUTERNAME_LENGTH + 1;
+    if (GetComputerName(hostname, &hostname_len)) {
+        return string(hostname);
+    }
+#else
+    // POSIX implementation
     char hostname[HOST_NAME_MAX];
-    gethostname(hostname, HOST_NAME_MAX);
-    return string(hostname);
+    if (gethostname(hostname, HOST_NAME_MAX) == 0) {
+        return string(hostname);
+    }
+#endif
+    return "unknown";
 }
 
 // Get process counts from /proc/stat
