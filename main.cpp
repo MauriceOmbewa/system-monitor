@@ -86,6 +86,10 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetNextItemWidth(120);
     ImGui::SliderFloat("FPS", &g_cpuGraph.fps, 1.0f, 60.0f, "%.1f");
     
+    // Y-axis scale slider
+    ImGui::SetNextItemWidth(120);
+    ImGui::SliderFloat("Scale", &g_cpuGraph.scale, 10.0f, 200.0f, "%.1f");
+    
     // Update CPU graph data
     updateCPUGraph(g_cpuGraph);
     
