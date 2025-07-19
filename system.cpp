@@ -81,6 +81,40 @@ int getCPUCoreCount() {
     return count > 0 ? count : 1;
 }
 
+// Get fan status (enabled/disabled)
+bool getFanStatus() {
+    // Try to read from hwmon
+    DIR* hwmon_dir = opendir("/sys/class/hwmon");
+    if (!hwmon_dir) return false;
+    
+    struct dirent* entry;
+    while ((entry = readdir(hwmon_dir)) != nullptr) {
+        if (entry->d_type == DT_DIR && string(entry->d_name) != "." && string(entry->d_name) != "..") {
+            string fan_path = "/sys/class/hwmon/" + string(entry->d_name) + "/fan1_enable";
+            ifstream fan_file(fan_path);
+            if (fan_file.is_open()) {
+                int status;
+                fan_file >> status;
+                closedir(hwmon_dir);
+                return status == 1;
+            }
+            
+            // Try alternative path
+            fan_path = "/sys/class/hwmon/" + string(entry->d_name) + "/pwm1_enable";
+            ifstream fan_file2(fan_path);
+            if (fan_file2.is_open()) {
+                int status;
+                fan_file2 >> status;
+                closedir(hwmon_dir);
+                return status > 0;
+            }
+        }
+    }
+    
+    closedir(hwmon_dir);
+    return false;
+}
+
 // Get CPU temperature from thermal zones
 float getCPUTemperature() {
     ifstream temp_file("/sys/class/thermal/thermal_zone0/temp");

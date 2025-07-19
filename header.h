@@ -134,6 +134,7 @@ vector<float> getLoadAverage();
 float getCPUTemperature();
 void updateCPUGraph(CPUGraph& graph);
 int getCPUCoreCount();
+bool getFanStatus();
 
 // student TODO : memory and processes
 
