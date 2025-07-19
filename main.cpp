@@ -72,33 +72,55 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Text("Load: %.2f %.2f %.2f", loads[0], loads[1], loads[2]);
     ImGui::Text("CPU Temp: %.1f°C", getCPUTemperature());
     
-    // CPU Usage Graph
+    // Tabbed section for CPU, Fan, and Thermal
     ImGui::Spacing();
     ImGui::Separator();
-    ImGui::Text("CPU Usage Graph");
     
-    // Play/Pause button
-    if (ImGui::Button(g_cpuGraph.paused ? "Play" : "Pause")) {
-        g_cpuGraph.paused = !g_cpuGraph.paused;
+    if (ImGui::BeginTabBar("SystemTabs")) {
+        // CPU Tab
+        if (ImGui::BeginTabItem("CPU")) {
+            ImGui::Text("CPU Usage Graph");
+            
+            // Play/Pause button
+            if (ImGui::Button(g_cpuGraph.paused ? "Play" : "Pause")) {
+                g_cpuGraph.paused = !g_cpuGraph.paused;
+            }
+            
+            // FPS slider
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("FPS", &g_cpuGraph.fps, 1.0f, 60.0f, "%.1f");
+            
+            // Y-axis scale slider
+            ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("Scale", &g_cpuGraph.scale, 10.0f, 200.0f, "%.1f");
+            
+            // Update CPU graph data
+            updateCPUGraph(g_cpuGraph);
+            
+            // Plot the CPU usage graph
+            ImGui::PlotLines("##cpuusage", g_cpuGraph.values, CPUGraph::MAX_VALUES, 
+                            g_cpuGraph.values_offset, 
+                            ("CPU Usage: " + to_string((int)g_cpuGraph.values[g_cpuGraph.values_offset == 0 ? CPUGraph::MAX_VALUES - 1 : g_cpuGraph.values_offset - 1]) + "%").c_str(), 
+                            0.0f, g_cpuGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
+            
+            ImGui::EndTabItem();
+        }
+        
+        // Fan Tab (placeholder for now)
+        if (ImGui::BeginTabItem("Fan")) {
+            ImGui::Text("Fan information will be implemented here");
+            ImGui::EndTabItem();
+        }
+        
+        // Thermal Tab (placeholder for now)
+        if (ImGui::BeginTabItem("Thermal")) {
+            ImGui::Text("Thermal information will be implemented here");
+            ImGui::EndTabItem();
+        }
+        
+        ImGui::EndTabBar();
     }
-    
-    // FPS slider
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(120);
-    ImGui::SliderFloat("FPS", &g_cpuGraph.fps, 1.0f, 60.0f, "%.1f");
-    
-    // Y-axis scale slider
-    ImGui::SetNextItemWidth(120);
-    ImGui::SliderFloat("Scale", &g_cpuGraph.scale, 10.0f, 200.0f, "%.1f");
-    
-    // Update CPU graph data
-    updateCPUGraph(g_cpuGraph);
-    
-    // Plot the CPU usage graph
-    ImGui::PlotLines("##cpuusage", g_cpuGraph.values, CPUGraph::MAX_VALUES, 
-                    g_cpuGraph.values_offset, 
-                    ("CPU Usage: " + to_string((int)g_cpuGraph.values[g_cpuGraph.values_offset == 0 ? CPUGraph::MAX_VALUES - 1 : g_cpuGraph.values_offset - 1]) + "%").c_str(), 
-                    0.0f, g_cpuGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
     
     ImGui::Spacing();
     ImGui::Text("Process Information");
