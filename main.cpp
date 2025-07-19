@@ -76,6 +76,11 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Separator();
     ImGui::Text("CPU Usage Graph");
     
+    // Play/Pause button
+    if (ImGui::Button(g_cpuGraph.paused ? "Play" : "Pause")) {
+        g_cpuGraph.paused = !g_cpuGraph.paused;
+    }
+    
     // Update CPU graph data
     updateCPUGraph(g_cpuGraph);
     
