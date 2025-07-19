@@ -51,6 +51,20 @@ vector<float> getLoadAverage() {
     return loads;
 }
 
+// Track CPU usage history for graph
+void updateCPUGraph(CPUGraph& graph) {
+    static float lastUpdateTime = 0.0f;
+    float currentTime = ImGui::GetTime();
+    float deltaTime = currentTime - lastUpdateTime;
+    
+    // Update at the specified FPS rate
+    if (deltaTime >= 1.0f / graph.fps) {
+        lastUpdateTime = currentTime;
+        float usage = getCPUUsage();
+        graph.addValue(usage);
+    }
+}
+
 // Get CPU temperature from thermal zones
 float getCPUTemperature() {
     ifstream temp_file("/sys/class/thermal/thermal_zone0/temp");
