@@ -72,6 +72,27 @@ struct IP4
     char addressBuffer[INET_ADDRSTRLEN];
 };
 
+struct CPUGraph
+{
+    static const int MAX_VALUES = 100;
+    float values[MAX_VALUES];
+    int values_offset;
+    bool paused;
+    float fps;
+    float scale;
+    
+    CPUGraph() : values_offset(0), paused(false), fps(30.0f), scale(100.0f) {
+        memset(values, 0, sizeof(values));
+    }
+    
+    void addValue(float value) {
+        if (!paused) {
+            values[values_offset] = value;
+            values_offset = (values_offset + 1) % MAX_VALUES;
+        }
+    }
+};
+
 struct Networks
 {
     vector<IP4> ip4s;
