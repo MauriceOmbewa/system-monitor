@@ -133,6 +133,7 @@ long getSystemUptime();
 vector<float> getLoadAverage();
 float getCPUTemperature();
 void updateCPUGraph(CPUGraph& graph);
+int getCPUCoreCount();
 
 // student TODO : memory and processes
 

@@ -65,6 +65,22 @@ void updateCPUGraph(CPUGraph& graph) {
     }
 }
 
+// Get number of CPU cores
+int getCPUCoreCount() {
+    ifstream cpuinfo("/proc/cpuinfo");
+    if (!cpuinfo.is_open()) return 1;
+    
+    string line;
+    int count = 0;
+    while (getline(cpuinfo, line)) {
+        if (line.find("processor") != string::npos) {
+            count++;
+        }
+    }
+    
+    return count > 0 ? count : 1;
+}
+
 // Get CPU temperature from thermal zones
 float getCPUTemperature() {
     ifstream temp_file("/sys/class/thermal/thermal_zone0/temp");
