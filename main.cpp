@@ -1,6 +1,9 @@
 #include "header.h"
 #include <SDL.h>
 
+// Global CPU graph instance
+CPUGraph g_cpuGraph;
+
 /*
 NOTE : You are free to change the code as you wish, the main objective is to make the
        application work and pass the audit.
@@ -67,6 +70,20 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     vector<float> loads = getLoadAverage();
     ImGui::Text("Load: %.2f %.2f %.2f", loads[0], loads[1], loads[2]);
     ImGui::Text("CPU Temp: %.1f°C", getCPUTemperature());
+    
+    // CPU Usage Graph
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Text("CPU Usage Graph");
+    
+    // Update CPU graph data
+    updateCPUGraph(g_cpuGraph);
+    
+    // Plot the CPU usage graph
+    ImGui::PlotLines("##cpuusage", g_cpuGraph.values, CPUGraph::MAX_VALUES, 
+                    g_cpuGraph.values_offset, 
+                    ("CPU Usage: " + to_string((int)g_cpuGraph.values[g_cpuGraph.values_offset == 0 ? CPUGraph::MAX_VALUES - 1 : g_cpuGraph.values_offset - 1]) + "%").c_str(), 
+                    0.0f, g_cpuGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
     
     ImGui::Spacing();
     ImGui::Text("Process Information");
