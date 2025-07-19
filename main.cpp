@@ -81,6 +81,11 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         g_cpuGraph.paused = !g_cpuGraph.paused;
     }
     
+    // FPS slider
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120);
+    ImGui::SliderFloat("FPS", &g_cpuGraph.fps, 1.0f, 60.0f, "%.1f");
+    
     // Update CPU graph data
     updateCPUGraph(g_cpuGraph);
     
