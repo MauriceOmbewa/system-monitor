@@ -163,29 +163,6 @@ int getFanLevel() {
     return 0;
 }
 
-// Get fan level (0-255 typically)
-int getFanLevel() {
-    DIR* hwmon_dir = opendir("/sys/class/hwmon");
-    if (!hwmon_dir) return 0;
-    
-    struct dirent* entry;
-    while ((entry = readdir(hwmon_dir)) != nullptr) {
-        if (entry->d_type == DT_DIR && string(entry->d_name) != "." && string(entry->d_name) != "..") {
-            string fan_path = "/sys/class/hwmon/" + string(entry->d_name) + "/pwm1";
-            ifstream fan_file(fan_path);
-            if (fan_file.is_open()) {
-                int level;
-                fan_file >> level;
-                closedir(hwmon_dir);
-                return level;
-            }
-        }
-    }
-    
-    closedir(hwmon_dir);
-    return 0;
-}
-
 // Get all fan information in one structure
 FanInfo getFanInfo() {
     FanInfo info;
@@ -221,20 +198,6 @@ float getCPUTemperature() {
     int temp_millidegrees;
     temp_file >> temp_millidegrees;
     return temp_millidegrees / 1000.0f;
-}
-
-// Track temperature history for graph
-void updateThermalGraph(ThermalGraph& graph) {
-    static float lastUpdateTime = 0.0f;
-    float currentTime = ImGui::GetTime();
-    float deltaTime = currentTime - lastUpdateTime;
-    
-    // Update at the specified FPS rate
-    if (deltaTime >= 1.0f / graph.fps) {
-        lastUpdateTime = currentTime;
-        float temp = getCPUTemperature();
-        graph.addValue(temp);
-    }
 }
 
 // Track temperature history for graph

@@ -147,6 +147,7 @@ int getCPUCoreCount();
 bool getFanStatus();
 int getFanSpeed();
 int getFanLevel();
+FanInfo getFanInfo();
 
 // student TODO : memory and processes
 
