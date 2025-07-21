@@ -40,6 +40,8 @@
 #include <signal.h>
 #include <algorithm>
 #include <set>
+#include <sstream>
+#include <sys/resource.h>
 
 using namespace std;
 

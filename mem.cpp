@@ -306,3 +306,53 @@ vector<Process> getProcessChildren(int pid) {
     
     return children;
 }
+
+// Get process priority (nice value)
+int getProcessPriority(int pid) {
+    // Try to read from /proc/[pid]/stat
+    string stat_path = "/proc/" + to_string(pid) + "/stat";
+    ifstream stat_file(stat_path);
+    if (!stat_file.is_open()) {
+        return 0;
+    }
+    
+    string line;
+    getline(stat_file, line);
+    
+    // Find the closing parenthesis for the process name
+    size_t pos = line.rfind(')');
+    if (pos == string::npos) {
+        return 0;
+    }
+    
+    // Skip the process name and extract the remaining fields
+    string remaining = line.substr(pos + 2); // +2 to skip ') '
+    
+    // Parse the stat file fields (nice value is the 19th field)
+    vector<string> fields;
+    stringstream ss(remaining);
+    string field;
+    while (ss >> field) {
+        fields.push_back(field);
+    }
+    
+    // Nice value is the 18th field (0-indexed)
+    if (fields.size() > 18) {
+        return stoi(fields[18]);
+    }
+    
+    return 0;
+}
+
+// Set process priority (nice value)
+bool setProcessPriority(int pid, int priority) {
+    // Ensure priority is in valid range (-20 to 19)
+    priority = max(-20, min(priority, 19));
+    
+    // Use setpriority system call
+    if (setpriority(PRIO_PROCESS, pid, priority) == 0) {
+        return true;
+    }
+    
+    return false;
+}
