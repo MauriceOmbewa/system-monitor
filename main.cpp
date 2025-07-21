@@ -213,8 +213,63 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetWindowSize(id, size);
     ImGui::SetWindowPos(id, position);
 
-    // student TODO : add code here for the memory and process information
-
+    // Memory Information Section
+    ImGui::Text("Memory Information");
+    ImGui::Separator();
+    
+    // Get memory info
+    MemoryInfo mem_info = getMemoryInfo();
+    
+    // RAM usage
+    float ram_percentage = getMemoryUsagePercentage();
+    ImGui::Text("RAM Usage: %.1f%%", ram_percentage);
+    ImGui::Text("Total: %s", formatSize(mem_info.total_ram).c_str());
+    ImGui::Text("Used: %s", formatSize(mem_info.used_ram).c_str());
+    ImGui::Text("Free: %s", formatSize(mem_info.free_ram).c_str());
+    
+    // RAM progress bar
+    ImGui::ProgressBar(ram_percentage / 100.0f, ImVec2(-1, 0), 
+                       (formatSize(mem_info.used_ram) + " / " + formatSize(mem_info.total_ram)).c_str());
+    
+    ImGui::Spacing();
+    
+    // SWAP usage
+    float swap_percentage = getSwapUsagePercentage();
+    ImGui::Text("SWAP Usage: %.1f%%", swap_percentage);
+    ImGui::Text("Total: %s", formatSize(mem_info.total_swap).c_str());
+    ImGui::Text("Used: %s", formatSize(mem_info.used_swap).c_str());
+    ImGui::Text("Free: %s", formatSize(mem_info.free_swap).c_str());
+    
+    // SWAP progress bar
+    ImGui::ProgressBar(swap_percentage / 100.0f, ImVec2(-1, 0), 
+                       (formatSize(mem_info.used_swap) + " / " + formatSize(mem_info.total_swap)).c_str());
+    
+    ImGui::Spacing();
+    ImGui::Separator();
+    
+    // Disk usage section
+    ImGui::Text("Disk Usage");
+    ImGui::Separator();
+    
+    // Get all disks
+    vector<DiskInfo> disks = getAllDisks();
+    
+    for (const auto& disk : disks) {
+        float disk_percentage = (float)disk.used_space * 100.0f / disk.total_space;
+        ImGui::Text("%s: %.1f%%", disk.mount_point.c_str(), disk_percentage);
+        ImGui::Text("Total: %s", formatSize(disk.total_space).c_str());
+        ImGui::Text("Used: %s", formatSize(disk.used_space).c_str());
+        ImGui::Text("Free: %s", formatSize(disk.free_space).c_str());
+        
+        // Disk progress bar
+        ImGui::ProgressBar(disk_percentage / 100.0f, ImVec2(-1, 0), 
+                           (formatSize(disk.used_space) + " / " + formatSize(disk.total_space)).c_str());
+        
+        ImGui::Spacing();
+    }
+    
+    // Process section will be implemented in the next part
+    
     ImGui::End();
 }
 
