@@ -274,6 +274,13 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Text("Process Table");
     ImGui::Separator();
     
+    // Process statistics summary
+    map<string, int> proc_stats = getProcessCounts();
+    int total_procs = proc_stats["running"] + proc_stats["sleeping"] + proc_stats["stopped"] + proc_stats["zombie"];
+    ImGui::Text("Total: %d | Running: %d | Sleeping: %d | Stopped: %d | Zombie: %d", 
+               total_procs, proc_stats["running"], proc_stats["sleeping"], 
+               proc_stats["stopped"], proc_stats["zombie"]);
+    
     // Process filter
     static char filter_text[128] = "";
     ImGui::Text("Filter:");
