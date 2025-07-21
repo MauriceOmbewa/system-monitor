@@ -268,7 +268,70 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
         ImGui::Spacing();
     }
     
-    // Process section will be implemented in the next part
+    // Process Table Section
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Text("Process Table");
+    ImGui::Separator();
+    
+    // Process filter
+    static char filter_text[128] = "";
+    ImGui::Text("Filter:");
+    ImGui::SameLine();
+    ImGui::InputText("##filter", filter_text, IM_ARRAYSIZE(filter_text));
+    
+    // Get all processes and update CPU usage
+    static vector<Process> processes;
+    static float last_update_time = 0.0f;
+    float current_time = ImGui::GetTime();
+    
+    // Update process list every second
+    if (current_time - last_update_time >= 1.0f) {
+        processes = getAllProcesses();
+        updateProcessCpuUsage(processes);
+        last_update_time = current_time;
+    }
+    
+    // Process table
+    ImGui::BeginChild("ProcessTable", ImVec2(0, 300), true);
+    
+    // Table headers
+    ImGui::Columns(5, "ProcessTableColumns");
+    ImGui::Text("PID"); ImGui::NextColumn();
+    ImGui::Text("Name"); ImGui::NextColumn();
+    ImGui::Text("State"); ImGui::NextColumn();
+    ImGui::Text("CPU%%"); ImGui::NextColumn();
+    ImGui::Text("Memory%%"); ImGui::NextColumn();
+    ImGui::Separator();
+    
+    // Table rows
+    string filter(filter_text);
+    for (const auto& proc : processes) {
+        // Apply filter if any
+        if (!filter.empty() && 
+            proc.name.find(filter) == string::npos && 
+            to_string(proc.pid).find(filter) == string::npos) {
+            continue;
+        }
+        
+        // Allow row selection
+        char row_label[32];
+        sprintf(row_label, "%d##%d", proc.pid, proc.pid);
+        bool is_selected = false;
+        
+        if (ImGui::Selectable(row_label, &is_selected, ImGuiSelectableFlags_SpanAllColumns)) {
+            // Handle selection (could store selected PIDs in a set)
+        }
+        
+        ImGui::NextColumn();
+        ImGui::Text("%s", proc.name.c_str()); ImGui::NextColumn();
+        ImGui::Text("%s", proc.getStateString().c_str()); ImGui::NextColumn();
+        ImGui::Text("%.1f", proc.cpu_usage); ImGui::NextColumn();
+        ImGui::Text("%.1f", proc.memory_usage); ImGui::NextColumn();
+    }
+    
+    ImGui::Columns(1);
+    ImGui::EndChild();
     
     ImGui::End();
 }
