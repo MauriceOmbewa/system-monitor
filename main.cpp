@@ -307,7 +307,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     static bool sort_ascending = true;
     
     // Table headers with sorting
-    ImGui::Columns(5, "ProcessTableColumns");
+    ImGui::Columns(6, "ProcessTableColumns");
     
     // PID column header
     if (ImGui::Selectable("PID")) {
@@ -330,17 +330,24 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     }
     ImGui::NextColumn();
     
-    // CPU% column header
-    if (ImGui::Selectable("CPU%")) {
+    // Priority column header
+    if (ImGui::Selectable("Priority")) {
         if (sort_column == 3) sort_ascending = !sort_ascending;
         else { sort_column = 3; sort_ascending = true; }
     }
     ImGui::NextColumn();
     
-    // Memory% column header
-    if (ImGui::Selectable("Memory%")) {
+    // CPU% column header
+    if (ImGui::Selectable("CPU%")) {
         if (sort_column == 4) sort_ascending = !sort_ascending;
         else { sort_column = 4; sort_ascending = true; }
+    }
+    ImGui::NextColumn();
+    
+    // Memory% column header
+    if (ImGui::Selectable("Memory%")) {
+        if (sort_column == 5) sort_ascending = !sort_ascending;
+        else { sort_column = 5; sort_ascending = true; }
     }
     ImGui::NextColumn();
     
@@ -357,9 +364,11 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
                     return sort_ascending ? (a.name < b.name) : (a.name > b.name);
                 case 2: // State
                     return sort_ascending ? (a.state < b.state) : (a.state > b.state);
-                case 3: // CPU%
+                case 3: // Priority
+                    return sort_ascending ? (a.priority < b.priority) : (a.priority > b.priority);
+                case 4: // CPU%
                     return sort_ascending ? (a.cpu_usage < b.cpu_usage) : (a.cpu_usage > b.cpu_usage);
-                case 4: // Memory%
+                case 5: // Memory%
                     return sort_ascending ? (a.memory_usage < b.memory_usage) : (a.memory_usage > b.memory_usage);
                 default:
                     return false;
@@ -434,6 +443,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
                 ImGui::NextColumn();
                 ImGui::Text("%s", proc.name.c_str()); ImGui::NextColumn();
                 ImGui::Text("%s", proc.getStateString().c_str()); ImGui::NextColumn();
+                ImGui::Text("%d", proc.priority); ImGui::NextColumn();
                 ImGui::Text("%.1f", proc.cpu_usage); ImGui::NextColumn();
                 ImGui::Text("%.1f", proc.memory_usage); ImGui::NextColumn();
             }
@@ -484,6 +494,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
             ImGui::NextColumn();
             ImGui::Text("%s", proc.name.c_str()); ImGui::NextColumn();
             ImGui::Text("%s", proc.getStateString().c_str()); ImGui::NextColumn();
+            ImGui::Text("%d", proc.priority); ImGui::NextColumn();
             ImGui::Text("%.1f", proc.cpu_usage); ImGui::NextColumn();
             ImGui::Text("%.1f", proc.memory_usage); ImGui::NextColumn();
         }
