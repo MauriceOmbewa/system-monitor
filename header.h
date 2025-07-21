@@ -152,6 +152,16 @@ void updateFanGraph(FanGraph& graph);
 void updateThermalGraph(ThermalGraph& graph);
 
 // student TODO : memory and processes
+struct MemoryInfo {
+    unsigned long total_ram;
+    unsigned long free_ram;
+    unsigned long used_ram;
+    unsigned long total_swap;
+    unsigned long free_swap;
+    unsigned long used_swap;
+};
+
+MemoryInfo getMemoryInfo();
 
 // student TODO : network
 
