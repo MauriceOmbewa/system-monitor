@@ -295,18 +295,76 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     // Process table
     ImGui::BeginChild("ProcessTable", ImVec2(0, 300), true);
     
-    // Table headers
+    // Sorting options
+    static int sort_column = 0; // 0=PID, 1=Name, 2=State, 3=CPU%, 4=Memory%
+    static bool sort_ascending = true;
+    
+    // Table headers with sorting
     ImGui::Columns(5, "ProcessTableColumns");
-    ImGui::Text("PID"); ImGui::NextColumn();
-    ImGui::Text("Name"); ImGui::NextColumn();
-    ImGui::Text("State"); ImGui::NextColumn();
-    ImGui::Text("CPU%%"); ImGui::NextColumn();
-    ImGui::Text("Memory%%"); ImGui::NextColumn();
+    
+    // PID column header
+    if (ImGui::Selectable("PID")) {
+        if (sort_column == 0) sort_ascending = !sort_ascending;
+        else { sort_column = 0; sort_ascending = true; }
+    }
+    ImGui::NextColumn();
+    
+    // Name column header
+    if (ImGui::Selectable("Name")) {
+        if (sort_column == 1) sort_ascending = !sort_ascending;
+        else { sort_column = 1; sort_ascending = true; }
+    }
+    ImGui::NextColumn();
+    
+    // State column header
+    if (ImGui::Selectable("State")) {
+        if (sort_column == 2) sort_ascending = !sort_ascending;
+        else { sort_column = 2; sort_ascending = true; }
+    }
+    ImGui::NextColumn();
+    
+    // CPU% column header
+    if (ImGui::Selectable("CPU%")) {
+        if (sort_column == 3) sort_ascending = !sort_ascending;
+        else { sort_column = 3; sort_ascending = true; }
+    }
+    ImGui::NextColumn();
+    
+    // Memory% column header
+    if (ImGui::Selectable("Memory%")) {
+        if (sort_column == 4) sort_ascending = !sort_ascending;
+        else { sort_column = 4; sort_ascending = true; }
+    }
+    ImGui::NextColumn();
+    
     ImGui::Separator();
+    
+    // Sort processes based on selected column
+    vector<Process> sorted_processes = processes;
+    sort(sorted_processes.begin(), sorted_processes.end(), 
+        [sort_column, sort_ascending](const Process& a, const Process& b) {
+            switch (sort_column) {
+                case 0: // PID
+                    return sort_ascending ? (a.pid < b.pid) : (a.pid > b.pid);
+                case 1: // Name
+                    return sort_ascending ? (a.name < b.name) : (a.name > b.name);
+                case 2: // State
+                    return sort_ascending ? (a.state < b.state) : (a.state > b.state);
+                case 3: // CPU%
+                    return sort_ascending ? (a.cpu_usage < b.cpu_usage) : (a.cpu_usage > b.cpu_usage);
+                case 4: // Memory%
+                    return sort_ascending ? (a.memory_usage < b.memory_usage) : (a.memory_usage > b.memory_usage);
+                default:
+                    return false;
+            }
+        });
+    
+    // Store selected PIDs
+    static set<int> selected_pids;
     
     // Table rows
     string filter(filter_text);
-    for (const auto& proc : processes) {
+    for (const auto& proc : sorted_processes) {
         // Apply filter if any
         if (!filter.empty() && 
             proc.name.find(filter) == string::npos && 
@@ -314,13 +372,25 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
             continue;
         }
         
+        // Check if this process is selected
+        bool is_selected = selected_pids.find(proc.pid) != selected_pids.end();
+        
         // Allow row selection
         char row_label[32];
         sprintf(row_label, "%d##%d", proc.pid, proc.pid);
-        bool is_selected = false;
         
-        if (ImGui::Selectable(row_label, &is_selected, ImGuiSelectableFlags_SpanAllColumns)) {
-            // Handle selection (could store selected PIDs in a set)
+        // Handle multi-selection with Ctrl key
+        ImGuiSelectableFlags flags = ImGuiSelectableFlags_SpanAllColumns;
+        if (ImGui::Selectable(row_label, is_selected, flags)) {
+            if (ImGui::GetIO().KeyCtrl) {
+                // Toggle selection with Ctrl
+                if (is_selected) selected_pids.erase(proc.pid);
+                else selected_pids.insert(proc.pid);
+            } else {
+                // Single selection without Ctrl
+                selected_pids.clear();
+                selected_pids.insert(proc.pid);
+            }
         }
         
         ImGui::NextColumn();
