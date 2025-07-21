@@ -404,6 +404,14 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::EndChild();
     
     // Process actions
+    if (ImGui::Button("Refresh")) {
+        processes = getAllProcesses();
+        updateProcessCpuUsage(processes);
+        last_update_time = current_time;
+    }
+    
+    ImGui::SameLine();
+    
     if (!selected_pids.empty()) {
         if (ImGui::Button("Kill Selected Process(es)")) {
             for (int pid : selected_pids) {
