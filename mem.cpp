@@ -38,3 +38,20 @@ DiskInfo getDiskInfo(const string& path) {
     
     return info;
 }
+
+// Get information for all mounted disks
+vector<DiskInfo> getAllDisks() {
+    vector<DiskInfo> disks;
+    
+    // Common mount points to check
+    vector<string> mount_points = {"/", "/home", "/boot", "/usr", "/var"};
+    
+    for (const auto& mount : mount_points) {
+        DiskInfo info = getDiskInfo(mount);
+        if (info.total_space > 0) { // Only add valid disks
+            disks.push_back(info);
+        }
+    }
+    
+    return disks;
+}

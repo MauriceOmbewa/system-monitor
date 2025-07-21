@@ -170,6 +170,7 @@ struct DiskInfo {
 
 MemoryInfo getMemoryInfo();
 DiskInfo getDiskInfo(const string& path = "/");
+vector<DiskInfo> getAllDisks();
 
 // student TODO : network
 
