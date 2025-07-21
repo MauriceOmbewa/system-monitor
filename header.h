@@ -194,6 +194,13 @@ float getMemoryUsagePercentage();
 float getSwapUsagePercentage();
 float getDiskUsagePercentage(const string& path = "/");
 
+// Process related functions
+Process getProcessInfo(int pid);
+vector<Process> getAllProcesses();
+void updateProcessCpuUsage(vector<Process>& processes);
+string getProcessName(int pid);
+bool killProcess(int pid);
+
 // student TODO : network
 
 #endif
