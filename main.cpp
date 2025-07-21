@@ -403,6 +403,23 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Columns(1);
     ImGui::EndChild();
     
+    // Process actions
+    if (!selected_pids.empty()) {
+        if (ImGui::Button("Kill Selected Process(es)")) {
+            for (int pid : selected_pids) {
+                if (killProcess(pid)) {
+                    // Process killed successfully
+                } else {
+                    // Failed to kill process
+                }
+            }
+            // Refresh process list immediately after kill
+            processes = getAllProcesses();
+            updateProcessCpuUsage(processes);
+            selected_pids.clear();
+        }
+    }
+    
     ImGui::End();
 }
 
