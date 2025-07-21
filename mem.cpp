@@ -55,3 +55,40 @@ vector<DiskInfo> getAllDisks() {
     
     return disks;
 }
+
+// Format size in bytes to human-readable format (KB, MB, GB)
+string formatSize(unsigned long size_in_bytes) {
+    float size = size_in_bytes;
+    string units[] = {"B", "KB", "MB", "GB", "TB"};
+    int unit_index = 0;
+    
+    while (size >= 1024 && unit_index < 4) {
+        size /= 1024;
+        unit_index++;
+    }
+    
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%.2f %s", size, units[unit_index].c_str());
+    return string(buffer);
+}
+
+// Get RAM usage percentage
+float getMemoryUsagePercentage() {
+    MemoryInfo info = getMemoryInfo();
+    if (info.total_ram == 0) return 0.0f;
+    return (float)info.used_ram * 100.0f / info.total_ram;
+}
+
+// Get SWAP usage percentage
+float getSwapUsagePercentage() {
+    MemoryInfo info = getMemoryInfo();
+    if (info.total_swap == 0) return 0.0f;
+    return (float)info.used_swap * 100.0f / info.total_swap;
+}
+
+// Get disk usage percentage
+float getDiskUsagePercentage(const string& path) {
+    DiskInfo info = getDiskInfo(path);
+    if (info.total_space == 0) return 0.0f;
+    return (float)info.used_space * 100.0f / info.total_space;
+}

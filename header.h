@@ -171,6 +171,10 @@ struct DiskInfo {
 MemoryInfo getMemoryInfo();
 DiskInfo getDiskInfo(const string& path = "/");
 vector<DiskInfo> getAllDisks();
+string formatSize(unsigned long size_in_bytes);
+float getMemoryUsagePercentage();
+float getSwapUsagePercentage();
+float getDiskUsagePercentage(const string& path = "/");
 
 // student TODO : network
 
