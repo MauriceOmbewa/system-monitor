@@ -21,3 +21,20 @@ MemoryInfo getMemoryInfo() {
     
     return info;
 }
+
+// Get disk usage information
+DiskInfo getDiskInfo(const string& path) {
+    DiskInfo info = {0};
+    struct statvfs disk_info;
+    
+    if (statvfs(path.c_str(), &disk_info) != 0) {
+        return info; // Return zeros on error
+    }
+    
+    info.mount_point = path;
+    info.total_space = disk_info.f_blocks * disk_info.f_frsize;
+    info.free_space = disk_info.f_bfree * disk_info.f_frsize;
+    info.used_space = info.total_space - info.free_space;
+    
+    return info;
+}
