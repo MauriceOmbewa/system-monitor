@@ -148,6 +148,7 @@ bool getFanStatus();
 int getFanSpeed();
 int getFanLevel();
 FanInfo getFanInfo();
+void updateFanGraph(FanGraph& graph);
 
 // student TODO : memory and processes
 
