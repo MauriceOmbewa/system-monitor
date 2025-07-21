@@ -72,7 +72,13 @@ struct IP4
     char addressBuffer[INET_ADDRSTRLEN];
 };
 
-struct CPUGraph
+struct FanInfo {
+    bool status;
+    int speed;
+    int level;
+};
+
+struct Graph
 {
     static const int MAX_VALUES = 100;
     float values[MAX_VALUES];
@@ -81,7 +87,7 @@ struct CPUGraph
     float fps;
     float scale;
     
-    CPUGraph() : values_offset(0), paused(false), fps(30.0f), scale(100.0f) {
+    Graph() : values_offset(0), paused(false), fps(30.0f), scale(100.0f) {
         memset(values, 0, sizeof(values));
     }
     
@@ -92,6 +98,10 @@ struct CPUGraph
         }
     }
 };
+
+typedef Graph CPUGraph;
+typedef Graph FanGraph;
+typedef Graph ThermalGraph;
 
 struct Networks
 {
@@ -135,6 +145,8 @@ float getCPUTemperature();
 void updateCPUGraph(CPUGraph& graph);
 int getCPUCoreCount();
 bool getFanStatus();
+int getFanSpeed();
+int getFanLevel();
 
 // student TODO : memory and processes
 

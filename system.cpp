@@ -81,6 +81,8 @@ int getCPUCoreCount() {
     return count > 0 ? count : 1;
 }
 
+// Fan data structure is already defined in header.h
+
 // Get fan status (enabled/disabled)
 bool getFanStatus() {
     // Try to read from hwmon
@@ -115,6 +117,102 @@ bool getFanStatus() {
     return false;
 }
 
+// Get fan speed in RPM
+int getFanSpeed() {
+    DIR* hwmon_dir = opendir("/sys/class/hwmon");
+    if (!hwmon_dir) return 0;
+    
+    struct dirent* entry;
+    while ((entry = readdir(hwmon_dir)) != nullptr) {
+        if (entry->d_type == DT_DIR && string(entry->d_name) != "." && string(entry->d_name) != "..") {
+            string fan_path = "/sys/class/hwmon/" + string(entry->d_name) + "/fan1_input";
+            ifstream fan_file(fan_path);
+            if (fan_file.is_open()) {
+                int speed;
+                fan_file >> speed;
+                closedir(hwmon_dir);
+                return speed;
+            }
+        }
+    }
+    
+    closedir(hwmon_dir);
+    return 0;
+}
+
+// Get fan level (0-255 typically)
+int getFanLevel() {
+    DIR* hwmon_dir = opendir("/sys/class/hwmon");
+    if (!hwmon_dir) return 0;
+    
+    struct dirent* entry;
+    while ((entry = readdir(hwmon_dir)) != nullptr) {
+        if (entry->d_type == DT_DIR && string(entry->d_name) != "." && string(entry->d_name) != "..") {
+            string fan_path = "/sys/class/hwmon/" + string(entry->d_name) + "/pwm1";
+            ifstream fan_file(fan_path);
+            if (fan_file.is_open()) {
+                int level;
+                fan_file >> level;
+                closedir(hwmon_dir);
+                return level;
+            }
+        }
+    }
+    
+    closedir(hwmon_dir);
+    return 0;
+}
+
+// Get fan level (0-255 typically)
+int getFanLevel() {
+    DIR* hwmon_dir = opendir("/sys/class/hwmon");
+    if (!hwmon_dir) return 0;
+    
+    struct dirent* entry;
+    while ((entry = readdir(hwmon_dir)) != nullptr) {
+        if (entry->d_type == DT_DIR && string(entry->d_name) != "." && string(entry->d_name) != "..") {
+            string fan_path = "/sys/class/hwmon/" + string(entry->d_name) + "/pwm1";
+            ifstream fan_file(fan_path);
+            if (fan_file.is_open()) {
+                int level;
+                fan_file >> level;
+                closedir(hwmon_dir);
+                return level;
+            }
+        }
+    }
+    
+    closedir(hwmon_dir);
+    return 0;
+}
+
+// Get all fan information in one structure
+FanInfo getFanInfo() {
+    FanInfo info;
+    info.status = getFanStatus();
+    info.speed = getFanSpeed();
+    info.level = getFanLevel();
+    return info;
+}
+
+// Track fan speed history for graph
+void updateFanGraph(FanGraph& graph) {
+    static float lastUpdateTime = 0.0f;
+    float currentTime = ImGui::GetTime();
+    float deltaTime = currentTime - lastUpdateTime;
+    
+    // Update at the specified FPS rate
+    if (deltaTime >= 1.0f / graph.fps) {
+        lastUpdateTime = currentTime;
+        int speed = getFanSpeed();
+        // Normalize fan speed to percentage for graph (assuming max speed of 5000 RPM)
+        float speedPercentage = (speed > 0) ? (float)speed / 5000.0f * 100.0f : 0.0f;
+        // Cap at 100%
+        speedPercentage = speedPercentage > 100.0f ? 100.0f : speedPercentage;
+        graph.addValue(speedPercentage);
+    }
+}
+
 // Get CPU temperature from thermal zones
 float getCPUTemperature() {
     ifstream temp_file("/sys/class/thermal/thermal_zone0/temp");
@@ -123,6 +221,34 @@ float getCPUTemperature() {
     int temp_millidegrees;
     temp_file >> temp_millidegrees;
     return temp_millidegrees / 1000.0f;
+}
+
+// Track temperature history for graph
+void updateThermalGraph(ThermalGraph& graph) {
+    static float lastUpdateTime = 0.0f;
+    float currentTime = ImGui::GetTime();
+    float deltaTime = currentTime - lastUpdateTime;
+    
+    // Update at the specified FPS rate
+    if (deltaTime >= 1.0f / graph.fps) {
+        lastUpdateTime = currentTime;
+        float temp = getCPUTemperature();
+        graph.addValue(temp);
+    }
+}
+
+// Track temperature history for graph
+void updateThermalGraph(ThermalGraph& graph) {
+    static float lastUpdateTime = 0.0f;
+    float currentTime = ImGui::GetTime();
+    float deltaTime = currentTime - lastUpdateTime;
+    
+    // Update at the specified FPS rate
+    if (deltaTime >= 1.0f / graph.fps) {
+        lastUpdateTime = currentTime;
+        float temp = getCPUTemperature();
+        graph.addValue(temp);
+    }
 }
 
 // Get current logged in user
