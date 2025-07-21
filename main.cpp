@@ -410,6 +410,12 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Columns(1);
     ImGui::EndChild();
     
+    // Process view options
+    static bool tree_view = false;
+    ImGui::Checkbox("Tree View", &tree_view);
+    
+    ImGui::SameLine();
+    
     // Process actions
     if (ImGui::Button("Refresh")) {
         processes = getAllProcesses();
