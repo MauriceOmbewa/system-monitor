@@ -198,3 +198,69 @@ Process getProcessInfo(int pid) {
     
     return proc;
 }
+
+// Get all processes
+vector<Process> getAllProcesses() {
+    vector<Process> processes;
+    
+    DIR* proc_dir = opendir("/proc");
+    if (!proc_dir) return processes;
+    
+    struct dirent* entry;
+    while ((entry = readdir(proc_dir)) != nullptr) {
+        // Check if the directory name is a number (PID)
+        if (isdigit(entry->d_name[0])) {
+            int pid = atoi(entry->d_name);
+            Process proc = getProcessInfo(pid);
+            if (!proc.name.empty()) { // Only add valid processes
+                processes.push_back(proc);
+            }
+        }
+    }
+    
+    closedir(proc_dir);
+    return processes;
+}
+
+// Update CPU usage for all processes
+void updateProcessCpuUsage(vector<Process>& processes) {
+    static map<int, pair<long long, long long>> prev_cpu_times; // pid -> (utime, stime)
+    static long prev_total_time = 0;
+    
+    // Get current system uptime
+    long uptime = getSystemUptime();
+    if (uptime == 0) return;
+    
+    // Calculate total CPU time
+    long total_time = uptime * sysconf(_SC_CLK_TCK);
+    long total_time_diff = total_time - prev_total_time;
+    if (total_time_diff <= 0) return;
+    
+    // Update CPU usage for each process
+    for (auto& proc : processes) {
+        long long curr_proc_time = proc.utime + proc.stime;
+        
+        // Check if we have previous data for this process
+        if (prev_cpu_times.find(proc.pid) != prev_cpu_times.end()) {
+            auto& prev_times = prev_cpu_times[proc.pid];
+            long long prev_proc_time = prev_times.first + prev_times.second;
+            long long proc_time_diff = curr_proc_time - prev_proc_time;
+            
+            // Calculate CPU usage percentage
+            if (proc_time_diff >= 0) {
+                proc.cpu_usage = (float)proc_time_diff * 100.0f / total_time_diff;
+            }
+        }
+        
+        // Store current times for next update
+        prev_cpu_times[proc.pid] = make_pair(proc.utime, proc.stime);
+    }
+    
+    prev_total_time = total_time;
+}
+
+// Kill a process by PID
+bool killProcess(int pid) {
+    if (pid <= 0) return false;
+    return (kill(pid, SIGTERM) == 0);
+}
