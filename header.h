@@ -55,15 +55,33 @@ struct CPUStats
 };
 
 // processes `stat`
-struct Proc
+struct Process
 {
     int pid;
     string name;
     char state;
-    long long int vsize;
-    long long int rss;
-    long long int utime;
-    long long int stime;
+    long long int vsize;      // Virtual memory size in bytes
+    long long int rss;        // Resident set size in bytes
+    long long int utime;      // User time
+    long long int stime;      // System time
+    float cpu_usage;          // CPU usage percentage
+    float memory_usage;       // Memory usage percentage
+    int ppid;                 // Parent process ID
+    int priority;             // Process priority
+    
+    // Get state as string
+    string getStateString() const {
+        switch (state) {
+            case 'R': return "Running";
+            case 'S': return "Sleeping";
+            case 'D': return "Disk Sleep";
+            case 'T': return "Stopped";
+            case 't': return "Tracing";
+            case 'Z': return "Zombie";
+            case 'X': return "Dead";
+            default: return string(1, state);
+        }
+    }
 };
 
 struct IP4
