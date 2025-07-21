@@ -40,6 +40,7 @@
 #include <signal.h>
 #include <algorithm>
 #include <set>
+#include <functional>
 #include <sstream>
 #include <sys/resource.h>
 

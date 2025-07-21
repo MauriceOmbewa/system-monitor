@@ -371,40 +371,122 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     
     // Table rows
     string filter(filter_text);
-    for (const auto& proc : sorted_processes) {
-        // Apply filter if any
-        if (!filter.empty() && 
-            proc.name.find(filter) == string::npos && 
-            to_string(proc.pid).find(filter) == string::npos) {
-            continue;
+    
+    if (tree_view) {
+        // Tree view - show processes in a hierarchical structure
+        map<int, vector<int>> process_tree = buildProcessTree();
+        map<int, Process> pid_to_process;
+        
+        // Create a map for quick process lookup
+        for (const auto& proc : sorted_processes) {
+            pid_to_process[proc.pid] = proc;
         }
         
-        // Check if this process is selected
-        bool is_selected = selected_pids.find(proc.pid) != selected_pids.end();
-        
-        // Allow row selection
-        char row_label[32];
-        sprintf(row_label, "%d##%d", proc.pid, proc.pid);
-        
-        // Handle multi-selection with Ctrl key
-        ImGuiSelectableFlags flags = ImGuiSelectableFlags_SpanAllColumns;
-        if (ImGui::Selectable(row_label, is_selected, flags)) {
-            if (ImGui::GetIO().KeyCtrl) {
-                // Toggle selection with Ctrl
-                if (is_selected) selected_pids.erase(proc.pid);
-                else selected_pids.insert(proc.pid);
-            } else {
-                // Single selection without Ctrl
-                selected_pids.clear();
-                selected_pids.insert(proc.pid);
+        // Find root processes (ppid = 0 or 1)
+        vector<int> root_pids;
+        for (const auto& proc : sorted_processes) {
+            if (proc.ppid <= 1) {
+                root_pids.push_back(proc.pid);
             }
         }
         
-        ImGui::NextColumn();
-        ImGui::Text("%s", proc.name.c_str()); ImGui::NextColumn();
-        ImGui::Text("%s", proc.getStateString().c_str()); ImGui::NextColumn();
-        ImGui::Text("%.1f", proc.cpu_usage); ImGui::NextColumn();
-        ImGui::Text("%.1f", proc.memory_usage); ImGui::NextColumn();
+        // Helper function to recursively display process tree
+        function<void(int, int)> displayProcessTree = [&](int pid, int depth) {
+            // Skip if process not found
+            if (pid_to_process.find(pid) == pid_to_process.end()) return;
+            
+            const Process& proc = pid_to_process[pid];
+            
+            // Apply filter if any
+            bool show_process = true;
+            if (!filter.empty()) {
+                show_process = (proc.name.find(filter) != string::npos || 
+                               to_string(proc.pid).find(filter) != string::npos);
+            }
+            
+            if (show_process) {
+                // Indent based on depth
+                for (int i = 0; i < depth; i++) {
+                    ImGui::Text("  "); ImGui::SameLine();
+                }
+                
+                // Check if this process is selected
+                bool is_selected = selected_pids.find(proc.pid) != selected_pids.end();
+                
+                // Allow row selection
+                char row_label[32];
+                sprintf(row_label, "%d##%d", proc.pid, proc.pid);
+                
+                // Handle multi-selection with Ctrl key
+                ImGuiSelectableFlags flags = ImGuiSelectableFlags_SpanAllColumns;
+                if (ImGui::Selectable(row_label, is_selected, flags)) {
+                    if (ImGui::GetIO().KeyCtrl) {
+                        // Toggle selection with Ctrl
+                        if (is_selected) selected_pids.erase(proc.pid);
+                        else selected_pids.insert(proc.pid);
+                    } else {
+                        // Single selection without Ctrl
+                        selected_pids.clear();
+                        selected_pids.insert(proc.pid);
+                    }
+                }
+                
+                ImGui::NextColumn();
+                ImGui::Text("%s", proc.name.c_str()); ImGui::NextColumn();
+                ImGui::Text("%s", proc.getStateString().c_str()); ImGui::NextColumn();
+                ImGui::Text("%.1f", proc.cpu_usage); ImGui::NextColumn();
+                ImGui::Text("%.1f", proc.memory_usage); ImGui::NextColumn();
+            }
+            
+            // Recursively display children
+            if (process_tree.find(pid) != process_tree.end()) {
+                for (int child_pid : process_tree[pid]) {
+                    displayProcessTree(child_pid, depth + 1);
+                }
+            }
+        };
+        
+        // Display the tree starting from root processes
+        for (int root_pid : root_pids) {
+            displayProcessTree(root_pid, 0);
+        }
+    } else {
+        // Flat view - show all processes in a list
+        for (const auto& proc : sorted_processes) {
+            // Apply filter if any
+            if (!filter.empty() && 
+                proc.name.find(filter) == string::npos && 
+                to_string(proc.pid).find(filter) == string::npos) {
+                continue;
+            }
+            
+            // Check if this process is selected
+            bool is_selected = selected_pids.find(proc.pid) != selected_pids.end();
+            
+            // Allow row selection
+            char row_label[32];
+            sprintf(row_label, "%d##%d", proc.pid, proc.pid);
+            
+            // Handle multi-selection with Ctrl key
+            ImGuiSelectableFlags flags = ImGuiSelectableFlags_SpanAllColumns;
+            if (ImGui::Selectable(row_label, is_selected, flags)) {
+                if (ImGui::GetIO().KeyCtrl) {
+                    // Toggle selection with Ctrl
+                    if (is_selected) selected_pids.erase(proc.pid);
+                    else selected_pids.insert(proc.pid);
+                } else {
+                    // Single selection without Ctrl
+                    selected_pids.clear();
+                    selected_pids.insert(proc.pid);
+                }
+            }
+            
+            ImGui::NextColumn();
+            ImGui::Text("%s", proc.name.c_str()); ImGui::NextColumn();
+            ImGui::Text("%s", proc.getStateString().c_str()); ImGui::NextColumn();
+            ImGui::Text("%.1f", proc.cpu_usage); ImGui::NextColumn();
+            ImGui::Text("%.1f", proc.memory_usage); ImGui::NextColumn();
+        }
     }
     
     ImGui::Columns(1);
