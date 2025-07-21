@@ -532,6 +532,69 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
             updateProcessCpuUsage(processes);
             selected_pids.clear();
         }
+        
+        ImGui::SameLine();
+        
+        if (selected_pids.size() == 1) {
+            if (ImGui::Button("Details")) {
+                ImGui::OpenPopup("Process Details");
+            }
+        }
+    }
+    
+    // Process details popup
+    if (ImGui::BeginPopup("Process Details")) {
+        if (selected_pids.size() == 1) {
+            int pid = *selected_pids.begin();
+            Process proc;
+            
+            // Find the selected process
+            for (const auto& p : processes) {
+                if (p.pid == pid) {
+                    proc = p;
+                    break;
+                }
+            }
+            
+            ImGui::Text("Process Details");
+            ImGui::Separator();
+            ImGui::Text("PID: %d", proc.pid);
+            ImGui::Text("Name: %s", proc.name.c_str());
+            ImGui::Text("State: %s", proc.getStateString().c_str());
+            ImGui::Text("Parent PID: %d", proc.ppid);
+            ImGui::Text("Priority: %d", proc.priority);
+            ImGui::Text("CPU Usage: %.2f%%", proc.cpu_usage);
+            ImGui::Text("Memory Usage: %.2f%%", proc.memory_usage);
+            ImGui::Text("Virtual Memory: %s", formatSize(proc.vsize).c_str());
+            ImGui::Text("Resident Memory: %s", formatSize(proc.rss).c_str());
+            
+            // Priority adjustment
+            static int new_priority = 0;
+            if (ImGui::SliderInt("New Priority", &new_priority, -20, 19)) {
+                // Slider moved
+            }
+            
+            if (ImGui::Button("Set Priority")) {
+                if (setProcessPriority(pid, new_priority)) {
+                    // Priority set successfully
+                    proc.priority = new_priority;
+                }
+            }
+            
+            ImGui::Separator();
+            
+            // Child processes
+            vector<Process> children = getProcessChildren(pid);
+            if (!children.empty()) {
+                ImGui::Text("Child Processes:");
+                for (const auto& child : children) {
+                    ImGui::Text("PID: %d, Name: %s", child.pid, child.name.c_str());
+                }
+            } else {
+                ImGui::Text("No child processes");
+            }
+        }
+        ImGui::EndPopup();
     }
     
     ImGui::End();
