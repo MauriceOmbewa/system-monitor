@@ -149,6 +149,7 @@ int getFanSpeed();
 int getFanLevel();
 FanInfo getFanInfo();
 void updateFanGraph(FanGraph& graph);
+void updateThermalGraph(ThermalGraph& graph);
 
 // student TODO : memory and processes
 
