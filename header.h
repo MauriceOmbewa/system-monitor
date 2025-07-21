@@ -203,6 +203,10 @@ vector<Process> getAllProcesses();
 void updateProcessCpuUsage(vector<Process>& processes);
 string getProcessName(int pid);
 bool killProcess(int pid);
+map<int, vector<int>> buildProcessTree();
+vector<Process> getProcessChildren(int pid);
+int getProcessPriority(int pid);
+bool setProcessPriority(int pid, int priority);
 
 // student TODO : network
 
