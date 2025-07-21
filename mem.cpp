@@ -92,3 +92,109 @@ float getDiskUsagePercentage(const string& path) {
     if (info.total_space == 0) return 0.0f;
     return (float)info.used_space * 100.0f / info.total_space;
 }
+
+// Get process name from /proc/[pid]/comm
+string getProcessName(int pid) {
+    string comm_path = "/proc/" + to_string(pid) + "/comm";
+    ifstream comm_file(comm_path);
+    if (!comm_file.is_open()) {
+        return "";
+    }
+    
+    string name;
+    getline(comm_file, name);
+    return name;
+}
+
+// Get detailed information about a process
+Process getProcessInfo(int pid) {
+    Process proc;
+    proc.pid = pid;
+    
+    // Get process name
+    proc.name = getProcessName(pid);
+    if (proc.name.empty()) {
+        // Try to get name from stat file if comm file failed
+        string stat_path = "/proc/" + to_string(pid) + "/stat";
+        ifstream stat_file(stat_path);
+        if (stat_file.is_open()) {
+            string line;
+            getline(stat_file, line);
+            
+            // Extract name from between parentheses
+            size_t open_paren = line.find('(');
+            size_t close_paren = line.rfind(')');
+            if (open_paren != string::npos && close_paren != string::npos && open_paren < close_paren) {
+                proc.name = line.substr(open_paren + 1, close_paren - open_paren - 1);
+            }
+        }
+    }
+    
+    // Get process state and other info from /proc/[pid]/stat
+    string stat_path = "/proc/" + to_string(pid) + "/stat";
+    ifstream stat_file(stat_path);
+    if (!stat_file.is_open()) {
+        return proc;
+    }
+    
+    string line;
+    getline(stat_file, line);
+    
+    // Find the closing parenthesis for the process name
+    size_t pos = line.rfind(')');
+    if (pos == string::npos) {
+        return proc;
+    }
+    
+    // Skip the process name and extract the remaining fields
+    string remaining = line.substr(pos + 2); // +2 to skip ') '
+    
+    // Parse the stat file fields
+    char state;
+    int ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
+    unsigned int flags, rt_priority, policy;
+    unsigned long minflt, cminflt, majflt, cmajflt, utime, stime, vsize, rss;
+    long cutime, cstime, priority, nice, num_threads, itrealvalue, starttime;
+    
+    sscanf(remaining.c_str(), "%c %d %d %d %d %d %u %lu %lu %lu %lu %lu %lu %ld %ld %ld %ld %ld %ld %lu %lu",
+           &state, &ppid, &pgrp, &session, &tty_nr, &tpgid, &flags, &minflt, &cminflt, &majflt, &cmajflt,
+           &utime, &stime, &cutime, &cstime, &priority, &nice, &num_threads, &itrealvalue, &starttime, &vsize);
+    
+    proc.state = state;
+    proc.ppid = ppid;
+    proc.priority = priority;
+    proc.utime = utime;
+    proc.stime = stime;
+    proc.vsize = vsize;
+    
+    // Get RSS (Resident Set Size)
+    string status_path = "/proc/" + to_string(pid) + "/status";
+    ifstream status_file(status_path);
+    if (status_file.is_open()) {
+        string status_line;
+        while (getline(status_file, status_line)) {
+            if (status_line.find("VmRSS:") == 0) {
+                // Extract the RSS value in kB
+                size_t colon_pos = status_line.find(':');
+                if (colon_pos != string::npos) {
+                    string rss_str = status_line.substr(colon_pos + 1);
+                    // Remove 'kB' and whitespace
+                    rss_str.erase(remove_if(rss_str.begin(), rss_str.end(), ::isalpha), rss_str.end());
+                    rss_str.erase(remove_if(rss_str.begin(), rss_str.end(), ::isspace), rss_str.end());
+                    proc.rss = stoll(rss_str) * 1024; // Convert kB to bytes
+                }
+                break;
+            }
+        }
+    }
+    
+    // Calculate memory usage percentage
+    MemoryInfo mem_info = getMemoryInfo();
+    if (mem_info.total_ram > 0) {
+        proc.memory_usage = (float)proc.rss * 100.0f / mem_info.total_ram;
+    } else {
+        proc.memory_usage = 0.0f;
+    }
+    
+    return proc;
+}
