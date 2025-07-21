@@ -1,8 +1,10 @@
 #include "header.h"
 #include <SDL.h>
 
-// Global CPU graph instance
+// Global graph instances
 CPUGraph g_cpuGraph;
+FanGraph g_fanGraph;
+ThermalGraph g_thermalGraph;
 
 /*
 NOTE : You are free to change the code as you wish, the main objective is to make the
@@ -107,15 +109,81 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             ImGui::EndTabItem();
         }
         
-        // Fan Tab (placeholder for now)
+        // Fan Tab
         if (ImGui::BeginTabItem("Fan")) {
-            ImGui::Text("Fan information will be implemented here");
+            ImGui::Text("Fan Information");
+            
+            // Get fan info
+            FanInfo fanInfo = getFanInfo();
+            
+            // Display fan status
+            ImGui::Text("Status: %s", fanInfo.status ? "Active" : "Inactive");
+            ImGui::Text("Speed: %d RPM", fanInfo.speed);
+            ImGui::Text("Level: %d", fanInfo.level);
+            
+            ImGui::Separator();
+            ImGui::Text("Fan Speed Graph");
+            
+            // Play/Pause button
+            if (ImGui::Button(g_fanGraph.paused ? "Play" : "Pause")) {
+                g_fanGraph.paused = !g_fanGraph.paused;
+            }
+            
+            // FPS slider
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("FPS##fan", &g_fanGraph.fps, 1.0f, 60.0f, "%.1f");
+            
+            // Y-axis scale slider
+            ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("Scale##fan", &g_fanGraph.scale, 10.0f, 200.0f, "%.1f");
+            
+            // Update fan graph data
+            updateFanGraph(g_fanGraph);
+            
+            // Plot the fan speed graph
+            ImGui::PlotLines("##fanspeed", g_fanGraph.values, FanGraph::MAX_VALUES, 
+                            g_fanGraph.values_offset, 
+                            ("Fan Speed: " + to_string((int)g_fanGraph.values[g_fanGraph.values_offset == 0 ? FanGraph::MAX_VALUES - 1 : g_fanGraph.values_offset - 1]) + "%").c_str(), 
+                            0.0f, g_fanGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
+            
             ImGui::EndTabItem();
         }
         
-        // Thermal Tab (placeholder for now)
+        // Thermal Tab
         if (ImGui::BeginTabItem("Thermal")) {
-            ImGui::Text("Thermal information will be implemented here");
+            ImGui::Text("Thermal Information");
+            
+            // Display current temperature
+            float currentTemp = getCPUTemperature();
+            ImGui::Text("Current Temperature: %.1f°C", currentTemp);
+            
+            ImGui::Separator();
+            ImGui::Text("Temperature Graph");
+            
+            // Play/Pause button
+            if (ImGui::Button(g_thermalGraph.paused ? "Play" : "Pause")) {
+                g_thermalGraph.paused = !g_thermalGraph.paused;
+            }
+            
+            // FPS slider
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("FPS##thermal", &g_thermalGraph.fps, 1.0f, 60.0f, "%.1f");
+            
+            // Y-axis scale slider
+            ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("Scale##thermal", &g_thermalGraph.scale, 10.0f, 100.0f, "%.1f");
+            
+            // Update thermal graph data
+            updateThermalGraph(g_thermalGraph);
+            
+            // Plot the temperature graph
+            ImGui::PlotLines("##tempgraph", g_thermalGraph.values, ThermalGraph::MAX_VALUES, 
+                            g_thermalGraph.values_offset, 
+                            ("Temperature: " + to_string((int)g_thermalGraph.values[g_thermalGraph.values_offset == 0 ? ThermalGraph::MAX_VALUES - 1 : g_thermalGraph.values_offset - 1]) + "°C").c_str(), 
+                            0.0f, g_thermalGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
+            
             ImGui::EndTabItem();
         }
         
