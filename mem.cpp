@@ -264,3 +264,45 @@ bool killProcess(int pid) {
     if (pid <= 0) return false;
     return (kill(pid, SIGTERM) == 0);
 }
+
+// Build a process tree (parent -> children mapping)
+map<int, vector<int>> buildProcessTree() {
+    map<int, vector<int>> tree;
+    vector<Process> processes = getAllProcesses();
+    
+    // Build the tree
+    for (const auto& proc : processes) {
+        if (proc.ppid > 0) {
+            tree[proc.ppid].push_back(proc.pid);
+        }
+    }
+    
+    return tree;
+}
+
+// Get all child processes of a given PID
+vector<Process> getProcessChildren(int pid) {
+    vector<Process> children;
+    map<int, vector<int>> tree = buildProcessTree();
+    
+    // If this process has no children, return empty vector
+    if (tree.find(pid) == tree.end()) {
+        return children;
+    }
+    
+    // Get all processes
+    vector<Process> all_processes = getAllProcesses();
+    map<int, Process> pid_to_process;
+    for (const auto& proc : all_processes) {
+        pid_to_process[proc.pid] = proc;
+    }
+    
+    // Add direct children
+    for (int child_pid : tree[pid]) {
+        if (pid_to_process.find(child_pid) != pid_to_process.end()) {
+            children.push_back(pid_to_process[child_pid]);
+        }
+    }
+    
+    return children;
+}
