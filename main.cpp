@@ -311,6 +311,9 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
         ImGui::Separator();
     }
     
+    // Process view options
+    static bool tree_view = false;
+    
     // Process statistics summary
     map<string, int> proc_stats = getProcessCounts();
     int total_procs = proc_stats["running"] + proc_stats["sleeping"] + proc_stats["stopped"] + proc_stats["zombie"];
@@ -574,7 +577,6 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::EndChild();
     
     // Process view options
-    static bool tree_view = false;
     ImGui::Checkbox("Tree View", &tree_view);
     
     ImGui::SameLine();
