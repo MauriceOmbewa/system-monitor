@@ -6,6 +6,22 @@ CPUGraph g_cpuGraph;
 FanGraph g_fanGraph;
 ThermalGraph g_thermalGraph;
 
+// Process monitoring alerts
+struct ProcessAlert {
+    int pid;
+    string name;
+    float cpu_threshold;
+    float memory_threshold;
+    bool cpu_alert_active;
+    bool memory_alert_active;
+    
+    ProcessAlert(int p, const string& n, float cpu, float mem)
+        : pid(p), name(n), cpu_threshold(cpu), memory_threshold(mem),
+          cpu_alert_active(false), memory_alert_active(false) {}
+};
+
+vector<ProcessAlert> g_process_alerts;
+
 /*
 NOTE : You are free to change the code as you wish, the main objective is to make the
        application work and pass the audit.
@@ -274,6 +290,27 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::Text("Process Table");
     ImGui::Separator();
     
+    // Display active alerts
+    if (!g_process_alerts.empty()) {
+        ImGui::Text("Active Alerts:");
+        for (const auto& alert : g_process_alerts) {
+            if (alert.cpu_alert_active || alert.memory_alert_active) {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s (PID: %d): ", alert.name.c_str(), alert.pid);
+                
+                if (alert.cpu_alert_active) {
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "CPU > %.1f%% ", alert.cpu_threshold);
+                }
+                
+                if (alert.memory_alert_active) {
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Memory > %.1f%%", alert.memory_threshold);
+                }
+            }
+        }
+        ImGui::Separator();
+    }
+    
     // Process statistics summary
     map<string, int> proc_stats = getProcessCounts();
     int total_procs = proc_stats["running"] + proc_stats["sleeping"] + proc_stats["stopped"] + proc_stats["zombie"];
@@ -297,6 +334,39 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
         processes = getAllProcesses();
         updateProcessCpuUsage(processes);
         last_update_time = current_time;
+        
+        // Check process alerts
+        for (auto& alert : g_process_alerts) {
+            bool found = false;
+            for (const auto& proc : processes) {
+                if (proc.pid == alert.pid) {
+                    found = true;
+                    
+                    // Check CPU threshold
+                    if (proc.cpu_usage > alert.cpu_threshold && !alert.cpu_alert_active) {
+                        alert.cpu_alert_active = true;
+                        // In a real application, you might show a notification or log this event
+                    } else if (proc.cpu_usage <= alert.cpu_threshold) {
+                        alert.cpu_alert_active = false;
+                    }
+                    
+                    // Check memory threshold
+                    if (proc.memory_usage > alert.memory_threshold && !alert.memory_alert_active) {
+                        alert.memory_alert_active = true;
+                        // In a real application, you might show a notification or log this event
+                    } else if (proc.memory_usage <= alert.memory_threshold) {
+                        alert.memory_alert_active = false;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            // Process no longer exists
+            if (!found) {
+                // In a real application, you might want to remove the alert or mark it as inactive
+            }
+        }
     }
     
     // Process table
@@ -540,6 +610,59 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
                 ImGui::OpenPopup("Process Details");
             }
         }
+    }
+    
+    // Process alerts
+    if (!selected_pids.empty() && selected_pids.size() == 1) {
+        ImGui::SameLine();
+        if (ImGui::Button("Add Alert")) {
+            ImGui::OpenPopup("Add Process Alert");
+        }
+    }
+    
+    // Add process alert popup
+    if (ImGui::BeginPopup("Add Process Alert")) {
+        static float cpu_threshold = 50.0f;
+        static float memory_threshold = 50.0f;
+        
+        if (selected_pids.size() == 1) {
+            int pid = *selected_pids.begin();
+            string name;
+            
+            // Find the selected process name
+            for (const auto& p : processes) {
+                if (p.pid == pid) {
+                    name = p.name;
+                    break;
+                }
+            }
+            
+            ImGui::Text("Add Alert for Process: %s (PID: %d)", name.c_str(), pid);
+            ImGui::Separator();
+            
+            ImGui::SliderFloat("CPU Threshold (%)", &cpu_threshold, 0.0f, 100.0f);
+            ImGui::SliderFloat("Memory Threshold (%)", &memory_threshold, 0.0f, 100.0f);
+            
+            if (ImGui::Button("Add Alert")) {
+                // Check if alert already exists for this PID
+                bool exists = false;
+                for (auto& alert : g_process_alerts) {
+                    if (alert.pid == pid) {
+                        alert.cpu_threshold = cpu_threshold;
+                        alert.memory_threshold = memory_threshold;
+                        exists = true;
+                        break;
+                    }
+                }
+                
+                if (!exists) {
+                    g_process_alerts.emplace_back(pid, name, cpu_threshold, memory_threshold);
+                }
+                
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
     }
     
     // Process details popup
