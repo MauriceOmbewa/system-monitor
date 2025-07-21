@@ -161,7 +161,15 @@ struct MemoryInfo {
     unsigned long used_swap;
 };
 
+struct DiskInfo {
+    unsigned long total_space;
+    unsigned long free_space;
+    unsigned long used_space;
+    string mount_point;
+};
+
 MemoryInfo getMemoryInfo();
+DiskInfo getDiskInfo(const string& path = "/");
 
 // student TODO : network
 
