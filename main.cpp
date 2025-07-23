@@ -732,8 +732,71 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetWindowSize(id, size);
     ImGui::SetWindowPos(id, position);
 
-    // student TODO : add code here for the network information
-
+    // Network Interfaces Section
+    ImGui::Text("Network Interfaces");
+    ImGui::Separator();
+    
+    // Get all network interfaces
+    static vector<NetworkInterface> interfaces;
+    static float last_update_time = 0.0f;
+    float current_time = ImGui::GetTime();
+    
+    // Update network interfaces every 5 seconds
+    if (current_time - last_update_time >= 5.0f || interfaces.empty()) {
+        interfaces = getNetworkInterfaces();
+        last_update_time = current_time;
+    }
+    
+    // Refresh button
+    if (ImGui::Button("Refresh")) {
+        interfaces = getNetworkInterfaces();
+        last_update_time = current_time;
+    }
+    
+    ImGui::Spacing();
+    
+    // Display interfaces in a table
+    if (ImGui::BeginTable("NetworkInterfaces", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        // Table headers
+        ImGui::TableSetupColumn("Interface");
+        ImGui::TableSetupColumn("Type");
+        ImGui::TableSetupColumn("Status");
+        ImGui::TableSetupColumn("IPv4 Address");
+        ImGui::TableSetupColumn("MAC Address");
+        ImGui::TableHeadersRow();
+        
+        // Table rows
+        for (const auto& interface : interfaces) {
+            ImGui::TableNextRow();
+            
+            // Interface name
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%s", interface.name.c_str());
+            
+            // Interface type
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", interface.type.c_str());
+            
+            // Interface status
+            ImGui::TableSetColumnIndex(2);
+            if (interface.is_up) {
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Up");
+            } else {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Down");
+            }
+            
+            // IPv4 address
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("%s", interface.ipv4_address.c_str());
+            
+            // MAC address
+            ImGui::TableSetColumnIndex(4);
+            ImGui::Text("%s", interface.mac_address.c_str());
+        }
+        
+        ImGui::EndTable();
+    }
+    
     ImGui::End();
 }
 
