@@ -41,3 +41,39 @@ vector<NetworkInterface> getNetworkInterfaces() {
     freeifaddrs(ifaddr);
     return interfaces;
 }
+
+// Get MAC address for a network interface
+string getMacAddress(const string& interface_name) {
+    string mac_address = "";
+    
+    // Try to read from /sys/class/net/[interface]/address
+    string path = "/sys/class/net/" + interface_name + "/address";
+    ifstream mac_file(path);
+    
+    if (mac_file.is_open()) {
+        getline(mac_file, mac_address);
+    } else {
+        // Fallback method using ioctl
+        int fd = socket(AF_INET, SOCK_DGRAM, 0);
+        if (fd != -1) {
+            struct ifreq ifr;
+            memset(&ifr, 0, sizeof(ifr));
+            strncpy(ifr.ifr_name, interface_name.c_str(), IFNAMSIZ - 1);
+            
+            if (ioctl(fd, SIOCGIFHWADDR, &ifr) != -1) {
+                char mac[18];
+                unsigned char* mac_ptr = (unsigned char*)ifr.ifr_hwaddr.sa_data;
+                
+                snprintf(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x",
+                         mac_ptr[0], mac_ptr[1], mac_ptr[2],
+                         mac_ptr[3], mac_ptr[4], mac_ptr[5]);
+                
+                mac_address = mac;
+            }
+            
+            close(fd);
+        }
+    }
+    
+    return mac_address;
+}

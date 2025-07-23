@@ -43,6 +43,9 @@
 #include <functional>
 #include <sstream>
 #include <sys/resource.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <string.h>
 
 using namespace std;
 
