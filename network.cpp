@@ -154,3 +154,90 @@ string getInterfaceType(const string& interface_name) {
         return "Unknown";
     }
 }
+
+// Get network statistics for a specific interface
+NetworkStats getNetworkStats(const string& interface_name) {
+    NetworkStats stats;
+    stats.interface_name = interface_name;
+    stats.rx_bytes = 0;
+    stats.rx_packets = 0;
+    stats.tx_bytes = 0;
+    stats.tx_packets = 0;
+    stats.rx_speed = 0.0f;
+    stats.tx_speed = 0.0f;
+    
+    // Read from /proc/net/dev
+    ifstream net_dev("/proc/net/dev");
+    if (!net_dev.is_open()) {
+        return stats;
+    }
+    
+    string line;
+    // Skip header lines
+    getline(net_dev, line); // Inter-|   Receive                                                |
+    getline(net_dev, line); // face |bytes    packets errs drop fifo frame compressed multicast|
+    
+    // Find the interface
+    while (getline(net_dev, line)) {
+        // Remove leading spaces
+        line.erase(0, line.find_first_not_of(" \t"));
+        
+        // Extract interface name (before the colon)
+        size_t colon_pos = line.find(':');
+        if (colon_pos == string::npos) continue;
+        
+        string if_name = line.substr(0, colon_pos);
+        if (if_name != interface_name) continue;
+        
+        // Parse the statistics
+        stringstream ss(line.substr(colon_pos + 1));
+        unsigned long rx_bytes, rx_packets, rx_errs, rx_drop, rx_fifo, rx_frame, rx_compressed, rx_multicast;
+        unsigned long tx_bytes, tx_packets, tx_errs, tx_drop, tx_fifo, tx_colls, tx_carrier, tx_compressed;
+        
+        ss >> rx_bytes >> rx_packets >> rx_errs >> rx_drop >> rx_fifo >> rx_frame >> rx_compressed >> rx_multicast
+           >> tx_bytes >> tx_packets >> tx_errs >> tx_drop >> tx_fifo >> tx_colls >> tx_carrier >> tx_compressed;
+        
+        stats.rx_bytes = rx_bytes;
+        stats.rx_packets = rx_packets;
+        stats.tx_bytes = tx_bytes;
+        stats.tx_packets = tx_packets;
+        
+        break;
+    }
+    
+    return stats;
+}
+
+// Update network traffic graphs
+void updateNetworkGraph(NetworkGraph& rx_graph, NetworkGraph& tx_graph, const string& interface_name) {
+    static float lastUpdateTime = 0.0f;
+    static unsigned long last_rx_bytes = 0;
+    static unsigned long last_tx_bytes = 0;
+    
+    float currentTime = ImGui::GetTime();
+    float deltaTime = currentTime - lastUpdateTime;
+    
+    // Update at the specified FPS rate
+    if (deltaTime >= 1.0f / rx_graph.fps) {
+        NetworkStats stats = getNetworkStats(interface_name);
+        
+        // Calculate speeds (bytes per second)
+        if (last_rx_bytes > 0 && last_tx_bytes > 0 && deltaTime > 0) {
+            float rx_speed = (stats.rx_bytes - last_rx_bytes) / deltaTime;
+            float tx_speed = (stats.tx_bytes - last_tx_bytes) / deltaTime;
+            
+            // Add values to graphs (convert to KB/s for better visualization)
+            rx_graph.addValue(rx_speed / 1024.0f);
+            tx_graph.addValue(tx_speed / 1024.0f);
+            
+            // Update stats object with calculated speeds
+            stats.rx_speed = rx_speed;
+            stats.tx_speed = tx_speed;
+        }
+        
+        // Store current values for next calculation
+        last_rx_bytes = stats.rx_bytes;
+        last_tx_bytes = stats.tx_bytes;
+        lastUpdateTime = currentTime;
+    }
+}
