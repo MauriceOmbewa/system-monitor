@@ -212,5 +212,17 @@ int getProcessPriority(int pid);
 bool setProcessPriority(int pid, int priority);
 
 // student TODO : network
+struct NetworkInterface {
+    string name;
+    string ipv4_address;
+    string mac_address;
+    bool is_up;
+    string type;
+};
+
+vector<NetworkInterface> getNetworkInterfaces();
+string getMacAddress(const string& interface_name);
+string getInterfaceType(const string& interface_name);
+bool isInterfaceUp(const string& interface_name);
 
 #endif
