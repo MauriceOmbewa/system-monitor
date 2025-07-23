@@ -223,9 +223,23 @@ struct NetworkInterface {
     string type;
 };
 
+struct NetworkStats {
+    string interface_name;
+    unsigned long rx_bytes;
+    unsigned long rx_packets;
+    unsigned long tx_bytes;
+    unsigned long tx_packets;
+    float rx_speed;  // bytes per second
+    float tx_speed;  // bytes per second
+};
+
+typedef Graph NetworkGraph;
+
 vector<NetworkInterface> getNetworkInterfaces();
 string getMacAddress(const string& interface_name);
 string getInterfaceType(const string& interface_name);
 bool isInterfaceUp(const string& interface_name);
+NetworkStats getNetworkStats(const string& interface_name);
+void updateNetworkGraph(NetworkGraph& rx_graph, NetworkGraph& tx_graph, const string& interface_name);
 
 #endif
