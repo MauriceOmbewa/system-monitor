@@ -773,7 +773,11 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
             
             // Interface name
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("%s", interface.name.c_str());
+            if (ImGui::Selectable(interface.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                // Select this interface for traffic monitoring
+                static string selected_interface = interface.name;
+                selected_interface = interface.name;
+            }
             
             // Interface type
             ImGui::TableSetColumnIndex(1);
@@ -798,6 +802,89 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
         
         ImGui::EndTable();
     }
+    
+    ImGui::Spacing();
+    ImGui::Separator();
+    
+    // Network Traffic Section
+    ImGui::Text("Network Traffic");
+    ImGui::Separator();
+    
+    // Select interface for monitoring
+    static string selected_interface = "";
+    if (interfaces.size() > 0 && selected_interface.empty()) {
+        // Default to first non-loopback interface, or loopback if that's all we have
+        for (const auto& interface : interfaces) {
+            if (interface.type != "Loopback") {
+                selected_interface = interface.name;
+                break;
+            }
+        }
+        
+        if (selected_interface.empty()) {
+            selected_interface = interfaces[0].name;
+        }
+    }
+    
+    // Interface selection combo
+    if (ImGui::BeginCombo("Interface", selected_interface.c_str())) {
+        for (const auto& interface : interfaces) {
+            bool is_selected = (selected_interface == interface.name);
+            if (ImGui::Selectable(interface.name.c_str(), is_selected)) {
+                selected_interface = interface.name;
+            }
+            
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    
+    // Get network stats for selected interface
+    NetworkStats stats = getNetworkStats(selected_interface);
+    
+    // Display current traffic stats
+    ImGui::Text("Received: %s (%lu packets)", formatSize(stats.rx_bytes).c_str(), stats.rx_packets);
+    ImGui::Text("Sent: %s (%lu packets)", formatSize(stats.tx_bytes).c_str(), stats.tx_packets);
+    
+    // Network traffic graphs
+    ImGui::Spacing();
+    ImGui::Text("Traffic Graphs (KB/s)");
+    
+    // Graph controls
+    if (ImGui::Button(g_rxGraph.paused ? "Play" : "Pause")) {
+        g_rxGraph.paused = !g_rxGraph.paused;
+        g_txGraph.paused = g_rxGraph.paused;
+    }
+    
+    // FPS slider
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120);
+    if (ImGui::SliderFloat("FPS##net", &g_rxGraph.fps, 1.0f, 60.0f, "%.1f")) {
+        g_txGraph.fps = g_rxGraph.fps;
+    }
+    
+    // Y-axis scale slider
+    ImGui::SetNextItemWidth(120);
+    if (ImGui::SliderFloat("Scale##net", &g_rxGraph.scale, 10.0f, 1000.0f, "%.1f")) {
+        g_txGraph.scale = g_rxGraph.scale;
+    }
+    
+    // Update network graphs
+    updateNetworkGraph(g_rxGraph, g_txGraph, selected_interface);
+    
+    // Plot the RX graph
+    ImGui::PlotLines("##rxgraph", g_rxGraph.values, NetworkGraph::MAX_VALUES, 
+                    g_rxGraph.values_offset, 
+                    ("RX: " + to_string((int)g_rxGraph.values[g_rxGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_rxGraph.values_offset - 1]) + " KB/s").c_str(), 
+                    0.0f, g_rxGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
+    
+    // Plot the TX graph
+    ImGui::PlotLines("##txgraph", g_txGraph.values, NetworkGraph::MAX_VALUES, 
+                    g_txGraph.values_offset, 
+                    ("TX: " + to_string((int)g_txGraph.values[g_txGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_txGraph.values_offset - 1]) + " KB/s").c_str(), 
+                    0.0f, g_txGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
     
     ImGui::End();
 }
