@@ -5,6 +5,8 @@
 CPUGraph g_cpuGraph;
 FanGraph g_fanGraph;
 ThermalGraph g_thermalGraph;
+NetworkGraph g_rxGraph;
+NetworkGraph g_txGraph;
 
 // Process monitoring alerts
 struct ProcessAlert {
