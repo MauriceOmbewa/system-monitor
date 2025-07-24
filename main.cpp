@@ -872,49 +872,52 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
         ImGui::EndTable();
     }
     
-    // Network traffic graphs
-    ImGui::Spacing();
-    ImGui::Text("Traffic Graphs (KB/s)");
-    
-    // Graph controls
-    if (ImGui::Button(g_rxGraph.paused ? "Play" : "Pause")) {
-        g_rxGraph.paused = !g_rxGraph.paused;
-        g_txGraph.paused = g_rxGraph.paused;
-    }
-    
-    // FPS slider
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(120);
-    if (ImGui::SliderFloat("FPS##net", &g_rxGraph.fps, 1.0f, 60.0f, "%.1f")) {
-        g_txGraph.fps = g_rxGraph.fps;
-    }
-    
-    // Y-axis scale slider
-    ImGui::SetNextItemWidth(120);
-    if (ImGui::SliderFloat("Scale##net", &g_rxGraph.scale, 10.0f, 1000.0f, "%.1f")) {
-        g_txGraph.scale = g_rxGraph.scale;
-    }
-    
-    // Update network graphs
-    updateNetworkGraph(g_rxGraph, g_txGraph, selected_interface);
-    
-    // Plot the RX graph
-    ImGui::PlotLines("##rxgraph", g_rxGraph.values, NetworkGraph::MAX_VALUES, 
-                    g_rxGraph.values_offset, 
-                    ("RX: " + to_string((int)g_rxGraph.values[g_rxGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_rxGraph.values_offset - 1]) + " KB/s").c_str(), 
-                    0.0f, g_rxGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
-    
-    // Plot the TX graph
-    ImGui::PlotLines("##txgraph", g_txGraph.values, NetworkGraph::MAX_VALUES, 
-                    g_txGraph.values_offset, 
-                    ("TX: " + to_string((int)g_txGraph.values[g_txGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_txGraph.values_offset - 1]) + " KB/s").c_str(), 
-                    0.0f, g_txGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
-    
+    // Tabbed section for Traffic Graphs
     ImGui::Spacing();
     ImGui::Separator();
     
-    // Network Connections and Ports Section
     if (ImGui::BeginTabBar("NetworkTabs")) {
+        // Traffic Graphs Tab
+        if (ImGui::BeginTabItem("Traffic Graphs")) {
+            ImGui::Text("Network Traffic Graphs (KB/s)");
+            
+            // Graph controls
+            if (ImGui::Button(g_rxGraph.paused ? "Play" : "Pause")) {
+                g_rxGraph.paused = !g_rxGraph.paused;
+                g_txGraph.paused = g_rxGraph.paused;
+            }
+            
+            // FPS slider
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(120);
+            if (ImGui::SliderFloat("FPS##net", &g_rxGraph.fps, 1.0f, 60.0f, "%.1f")) {
+                g_txGraph.fps = g_rxGraph.fps;
+            }
+            
+            // Y-axis scale slider
+            ImGui::SetNextItemWidth(120);
+            if (ImGui::SliderFloat("Scale##net", &g_rxGraph.scale, 10.0f, 1000.0f, "%.1f")) {
+                g_txGraph.scale = g_rxGraph.scale;
+            }
+            
+            // Update network graphs
+            updateNetworkGraph(g_rxGraph, g_txGraph, selected_interface);
+            
+            // Plot the RX graph
+            ImGui::PlotLines("##rxgraph", g_rxGraph.values, NetworkGraph::MAX_VALUES, 
+                            g_rxGraph.values_offset, 
+                            ("RX: " + to_string((int)g_rxGraph.values[g_rxGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_rxGraph.values_offset - 1]) + " KB/s").c_str(), 
+                            0.0f, g_rxGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
+            
+            // Plot the TX graph
+            ImGui::PlotLines("##txgraph", g_txGraph.values, NetworkGraph::MAX_VALUES, 
+                            g_txGraph.values_offset, 
+                            ("TX: " + to_string((int)g_txGraph.values[g_txGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_txGraph.values_offset - 1]) + " KB/s").c_str(), 
+                            0.0f, g_txGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
+            
+            ImGui::EndTabItem();
+        }
+    
         // Active Connections Tab
         if (ImGui::BeginTabItem("Connections")) {
             ImGui::Text("Active Network Connections");
