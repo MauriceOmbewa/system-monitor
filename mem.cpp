@@ -55,7 +55,7 @@ DiskInfo getDiskInfo(const string& path) {
     
     info.mount_point = path;
     info.total_space = disk_info.f_blocks * disk_info.f_frsize;
-    info.free_space = disk_info.f_bfree * disk_info.f_frsize;
+    info.free_space = disk_info.f_bavail * disk_info.f_frsize;  // Use f_bavail (available to users)
     info.used_space = info.total_space - info.free_space;
     
     return info;
@@ -64,14 +64,45 @@ DiskInfo getDiskInfo(const string& path) {
 // Get information for all mounted disks
 vector<DiskInfo> getAllDisks() {
     vector<DiskInfo> disks;
+    set<string> seen_devices; // To avoid duplicates
     
-    // Common mount points to check
-    vector<string> mount_points = {"/", "/home", "/boot", "/usr", "/var"};
+    ifstream mounts("/proc/mounts");
+    if (!mounts.is_open()) {
+        // Fallback to root filesystem only
+        DiskInfo root_info = getDiskInfo("/");
+        if (root_info.total_space > 0) {
+            disks.push_back(root_info);
+        }
+        return disks;
+    }
     
-    for (const auto& mount : mount_points) {
-        DiskInfo info = getDiskInfo(mount);
-        if (info.total_space > 0) { // Only add valid disks
-            disks.push_back(info);
+    string line;
+    while (getline(mounts, line)) {
+        stringstream ss(line);
+        string device, mount_point, fs_type;
+        ss >> device >> mount_point >> fs_type;
+        
+        // Skip virtual filesystems and duplicates
+        if (device.find("/dev/") == 0 && 
+            fs_type != "tmpfs" && fs_type != "devtmpfs" && 
+            fs_type != "sysfs" && fs_type != "proc" &&
+            seen_devices.find(device) == seen_devices.end()) {
+            
+            DiskInfo info = getDiskInfo(mount_point);
+            if (info.total_space > 0) {
+                info.mount_point = mount_point + " (" + device + ")"; // Show device name
+                disks.push_back(info);
+                seen_devices.insert(device);
+            }
+        }
+    }
+    
+    // If no real disks found, add root filesystem
+    if (disks.empty()) {
+        DiskInfo root_info = getDiskInfo("/");
+        if (root_info.total_space > 0) {
+            root_info.mount_point = "/";
+            disks.push_back(root_info);
         }
     }
     
