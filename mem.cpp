@@ -90,6 +90,7 @@ vector<DiskInfo> getAllDisks() {
             
             DiskInfo info = getDiskInfo(mount_point);
             if (info.total_space > 0) {
+                info.original_path = mount_point;  // Store original path
                 info.mount_point = mount_point + " (" + device + ")"; // Show device name
                 disks.push_back(info);
                 seen_devices.insert(device);
@@ -101,6 +102,7 @@ vector<DiskInfo> getAllDisks() {
     if (disks.empty()) {
         DiskInfo root_info = getDiskInfo("/");
         if (root_info.total_space > 0) {
+            root_info.original_path = "/";
             root_info.mount_point = "/";
             disks.push_back(root_info);
         }

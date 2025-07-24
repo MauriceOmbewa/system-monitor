@@ -193,6 +193,7 @@ struct DiskInfo {
     unsigned long free_space;
     unsigned long used_space;
     string mount_point;
+    string original_path;  // Store original mount point path for calculations
 };
 
 MemoryInfo getMemoryInfo();
