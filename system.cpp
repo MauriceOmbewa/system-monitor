@@ -276,22 +276,36 @@ map<string, int> getProcessCounts() {
     
     struct dirent* entry;
     while ((entry = readdir(proc_dir)) != nullptr) {
-        if (isdigit(entry->d_name[0])) {
+        // Check if directory name is all digits (PID)
+        if (entry->d_type == DT_DIR && isdigit(entry->d_name[0])) {
             string stat_path = "/proc/" + string(entry->d_name) + "/stat";
             ifstream stat_file(stat_path);
             if (stat_file.is_open()) {
                 string line;
                 getline(stat_file, line);
-                if (line.length() > 0) {
+                if (!line.empty()) {
                     // State is the 3rd field after pid and comm
-                    size_t pos = line.find(") ");
+                    // Find the last ')' to handle process names with spaces/parentheses
+                    size_t pos = line.rfind(')');
                     if (pos != string::npos && pos + 2 < line.length()) {
                         char state = line[pos + 2];
                         switch (state) {
                             case 'R': counts["running"]++; break;
-                            case 'S': counts["sleeping"]++; break;
-                            case 'T': counts["stopped"]++; break;
+                            case 'S': 
+                            case 'I': // Idle kernel threads (also sleeping)
+                                counts["sleeping"]++; break;
+                            case 'D': // Uninterruptible sleep (also sleeping)
+                                counts["sleeping"]++; break;
+                            case 'T': 
+                            case 't': // Stopped by job control signal or tracing
+                                counts["stopped"]++; break;
                             case 'Z': counts["zombie"]++; break;
+                            case 'X': // Dead (should never be seen)
+                                break;
+                            default:
+                                // Unknown state, count as sleeping
+                                counts["sleeping"]++;
+                                break;
                         }
                     }
                 }
