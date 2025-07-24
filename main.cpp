@@ -273,7 +273,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     vector<DiskInfo> disks = getAllDisks();
     
     for (const auto& disk : disks) {
-        float disk_percentage = (float)disk.used_space * 100.0f / disk.total_space;
+        float disk_percentage = getDiskUsagePercentage(disk.mount_point);
         ImGui::Text("%s: %.1f%%", disk.mount_point.c_str(), disk_percentage);
         ImGui::Text("Total: %s", formatSize(disk.total_space).c_str());
         ImGui::Text("Used: %s", formatSize(disk.used_space).c_str());
