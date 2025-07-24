@@ -3,21 +3,43 @@
 // Get memory information from /proc/meminfo
 MemoryInfo getMemoryInfo() {
     MemoryInfo info = {0};
-    struct sysinfo sys_info;
     
-    if (sysinfo(&sys_info) != 0) {
-        return info; // Return zeros on error
+    ifstream meminfo("/proc/meminfo");
+    if (!meminfo.is_open()) {
+        return info;
     }
     
-    // RAM info (convert to bytes)
-    info.total_ram = sys_info.totalram * sys_info.mem_unit;
-    info.free_ram = sys_info.freeram * sys_info.mem_unit;
-    info.used_ram = info.total_ram - info.free_ram;
+    string line;
+    unsigned long mem_total = 0, mem_free = 0, mem_available = 0;
+    unsigned long buffers = 0, cached = 0, swap_total = 0, swap_free = 0;
     
-    // SWAP info (convert to bytes)
-    info.total_swap = sys_info.totalswap * sys_info.mem_unit;
-    info.free_swap = sys_info.freeswap * sys_info.mem_unit;
-    info.used_swap = info.total_swap - info.free_swap;
+    while (getline(meminfo, line)) {
+        if (line.find("MemTotal:") == 0) {
+            sscanf(line.c_str(), "MemTotal: %lu kB", &mem_total);
+        } else if (line.find("MemFree:") == 0) {
+            sscanf(line.c_str(), "MemFree: %lu kB", &mem_free);
+        } else if (line.find("MemAvailable:") == 0) {
+            sscanf(line.c_str(), "MemAvailable: %lu kB", &mem_available);
+        } else if (line.find("Buffers:") == 0) {
+            sscanf(line.c_str(), "Buffers: %lu kB", &buffers);
+        } else if (line.find("Cached:") == 0) {
+            sscanf(line.c_str(), "Cached: %lu kB", &cached);
+        } else if (line.find("SwapTotal:") == 0) {
+            sscanf(line.c_str(), "SwapTotal: %lu kB", &swap_total);
+        } else if (line.find("SwapFree:") == 0) {
+            sscanf(line.c_str(), "SwapFree: %lu kB", &swap_free);
+        }
+    }
+    
+    // Convert kB to bytes
+    info.total_ram = mem_total * 1024;
+    info.free_ram = mem_available * 1024;  // Use available instead of free
+    // Calculate used memory like 'free' command: total - free - buffers - cached
+    info.used_ram = (mem_total - mem_free - buffers - cached) * 1024;
+    
+    info.total_swap = swap_total * 1024;
+    info.free_swap = swap_free * 1024;
+    info.used_swap = (swap_total - swap_free) * 1024;
     
     return info;
 }
