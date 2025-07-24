@@ -142,8 +142,9 @@ float getSwapUsagePercentage() {
 // Get disk usage percentage
 float getDiskUsagePercentage(const string& path) {
     DiskInfo info = getDiskInfo(path);
-    if (info.total_space == 0) return 0.0f;
-    return (float)info.used_space * 100.0f / info.total_space;
+    unsigned long usable_space = info.used_space + info.free_space;
+    if (usable_space == 0) return 0.0f;
+    return (float)info.used_space * 100.0f / usable_space;
 }
 
 // Get process name from /proc/[pid]/comm
