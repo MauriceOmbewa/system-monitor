@@ -241,3 +241,47 @@ void updateNetworkGraph(NetworkGraph& rx_graph, NetworkGraph& tx_graph, const st
         lastUpdateTime = currentTime;
     }
 }
+
+// Get process name from PID
+string getProcessNameFromPid(int pid) {
+    if (pid <= 0) return "";
+    
+    // Try to read from /proc/[pid]/comm
+    string comm_path = "/proc/" + to_string(pid) + "/comm";
+    ifstream comm_file(comm_path);
+    if (comm_file.is_open()) {
+        string name;
+        getline(comm_file, name);
+        return name;
+    }
+    
+    // Try to read from /proc/[pid]/cmdline
+    string cmdline_path = "/proc/" + to_string(pid) + "/cmdline";
+    ifstream cmdline_file(cmdline_path);
+    if (cmdline_file.is_open()) {
+        string cmdline;
+        getline(cmdline_file, cmdline);
+        
+        // Extract the base command name (remove path and arguments)
+        if (!cmdline.empty()) {
+            // Replace null bytes with spaces
+            replace(cmdline.begin(), cmdline.end(), '\0', ' ');
+            
+            // Extract the command name (without path)
+            size_t slash_pos = cmdline.find_last_of('/');
+            if (slash_pos != string::npos) {
+                cmdline = cmdline.substr(slash_pos + 1);
+            }
+            
+            // Extract just the command (without arguments)
+            size_t space_pos = cmdline.find(' ');
+            if (space_pos != string::npos) {
+                cmdline = cmdline.substr(0, space_pos);
+            }
+            
+            return cmdline;
+        }
+    }
+    
+    return "";
+}
