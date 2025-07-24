@@ -233,6 +233,23 @@ struct NetworkStats {
     float tx_speed;  // bytes per second
 };
 
+struct NetworkConnection {
+    string protocol;
+    string local_address;
+    string remote_address;
+    string state;
+    int pid;
+    string process_name;
+};
+
+struct PortInfo {
+    int port;
+    string protocol;
+    string state;
+    int pid;
+    string process_name;
+};
+
 typedef Graph NetworkGraph;
 
 vector<NetworkInterface> getNetworkInterfaces();
@@ -241,5 +258,8 @@ string getInterfaceType(const string& interface_name);
 bool isInterfaceUp(const string& interface_name);
 NetworkStats getNetworkStats(const string& interface_name);
 void updateNetworkGraph(NetworkGraph& rx_graph, NetworkGraph& tx_graph, const string& interface_name);
+vector<NetworkConnection> getActiveConnections();
+vector<PortInfo> getListeningPorts();
+string getProcessNameFromPid(int pid);
 
 #endif
