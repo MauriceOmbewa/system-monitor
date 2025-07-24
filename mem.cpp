@@ -55,8 +55,8 @@ DiskInfo getDiskInfo(const string& path) {
     
     info.mount_point = path;
     info.total_space = disk_info.f_blocks * disk_info.f_frsize;
-    info.free_space = disk_info.f_bavail * disk_info.f_frsize;  // Use f_bavail (available to users)
-    info.used_space = info.total_space - info.free_space;
+    info.free_space = disk_info.f_bavail * disk_info.f_frsize;  // Available to users
+    info.used_space = (disk_info.f_blocks - disk_info.f_bfree) * disk_info.f_frsize;  // Match df calculation
     
     return info;
 }
