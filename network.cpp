@@ -285,3 +285,77 @@ string getProcessNameFromPid(int pid) {
     
     return "";
 }
+
+// Get active network connections
+vector<NetworkConnection> getActiveConnections() {
+    vector<NetworkConnection> connections;
+    
+    // Read TCP connections from /proc/net/tcp
+    ifstream tcp_file("/proc/net/tcp");
+    if (tcp_file.is_open()) {
+        string line;
+        getline(tcp_file, line); // Skip header
+        
+        while (getline(tcp_file, line)) {
+            stringstream ss(line);
+            string sl, local_addr, rem_addr, st, tx_queue, rx_queue, tr, tm_when, retrnsmt, uid, timeout, inode;
+            
+            ss >> sl >> local_addr >> rem_addr >> st >> tx_queue >> rx_queue >> tr >> tm_when >> retrnsmt >> uid >> timeout >> inode;
+            
+            NetworkConnection conn;
+            conn.protocol = "TCP";
+            
+            // Parse local address (hex format: AAAAAAAA:PPPP)
+            if (local_addr.length() >= 9) {
+                unsigned int addr = stoul(local_addr.substr(0, 8), nullptr, 16);
+                unsigned int port = stoul(local_addr.substr(9), nullptr, 16);
+                
+                char ip_str[INET_ADDRSTRLEN];
+                struct in_addr in_addr;
+                in_addr.s_addr = addr;
+                inet_ntop(AF_INET, &in_addr, ip_str, INET_ADDRSTRLEN);
+                
+                conn.local_address = string(ip_str) + ":" + to_string(port);
+            }
+            
+            // Parse remote address
+            if (rem_addr.length() >= 9) {
+                unsigned int addr = stoul(rem_addr.substr(0, 8), nullptr, 16);
+                unsigned int port = stoul(rem_addr.substr(9), nullptr, 16);
+                
+                char ip_str[INET_ADDRSTRLEN];
+                struct in_addr in_addr;
+                in_addr.s_addr = addr;
+                inet_ntop(AF_INET, &in_addr, ip_str, INET_ADDRSTRLEN);
+                
+                conn.remote_address = string(ip_str) + ":" + to_string(port);
+            }
+            
+            // Parse state
+            int state_num = stoi(st, nullptr, 16);
+            switch (state_num) {
+                case 1: conn.state = "ESTABLISHED"; break;
+                case 2: conn.state = "SYN_SENT"; break;
+                case 3: conn.state = "SYN_RECV"; break;
+                case 4: conn.state = "FIN_WAIT1"; break;
+                case 5: conn.state = "FIN_WAIT2"; break;
+                case 6: conn.state = "TIME_WAIT"; break;
+                case 7: conn.state = "CLOSE"; break;
+                case 8: conn.state = "CLOSE_WAIT"; break;
+                case 9: conn.state = "LAST_ACK"; break;
+                case 10: conn.state = "LISTEN"; break;
+                case 11: conn.state = "CLOSING"; break;
+                default: conn.state = "UNKNOWN"; break;
+            }
+            
+            // Find process using the inode
+            conn.pid = 0;
+            conn.process_name = "";
+            
+            // Simple approach: just add the connection without PID lookup for now
+            connections.push_back(conn);
+        }
+    }
+    
+    return connections;
+}
