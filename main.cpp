@@ -844,9 +844,33 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     // Get network stats for selected interface
     NetworkStats stats = getNetworkStats(selected_interface);
     
-    // Display current traffic stats
-    ImGui::Text("Received: %s (%lu packets)", formatSize(stats.rx_bytes).c_str(), stats.rx_packets);
-    ImGui::Text("Sent: %s (%lu packets)", formatSize(stats.tx_bytes).c_str(), stats.tx_packets);
+    // Display current traffic stats in table format
+    if (ImGui::BeginTable("NetworkStats", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Direction");
+        ImGui::TableSetupColumn("Bytes");
+        ImGui::TableSetupColumn("Packets");
+        ImGui::TableHeadersRow();
+        
+        // RX row
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Text("Received");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%s", formatSize(stats.rx_bytes).c_str());
+        ImGui::TableSetColumnIndex(2);
+        ImGui::Text("%lu", stats.rx_packets);
+        
+        // TX row
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Text("Sent");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%s", formatSize(stats.tx_bytes).c_str());
+        ImGui::TableSetColumnIndex(2);
+        ImGui::Text("%lu", stats.tx_packets);
+        
+        ImGui::EndTable();
+    }
     
     // Network traffic graphs
     ImGui::Spacing();
