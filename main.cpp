@@ -886,6 +886,124 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
                     ("TX: " + to_string((int)g_txGraph.values[g_txGraph.values_offset == 0 ? NetworkGraph::MAX_VALUES - 1 : g_txGraph.values_offset - 1]) + " KB/s").c_str(), 
                     0.0f, g_txGraph.scale, ImVec2(ImGui::GetContentRegionAvail().x, 80));
     
+    ImGui::Spacing();
+    ImGui::Separator();
+    
+    // Network Connections and Ports Section
+    if (ImGui::BeginTabBar("NetworkTabs")) {
+        // Active Connections Tab
+        if (ImGui::BeginTabItem("Connections")) {
+            ImGui::Text("Active Network Connections");
+            
+            // Get active connections
+            static vector<NetworkConnection> connections;
+            static float last_conn_update = 0.0f;
+            
+            // Update connections every 3 seconds
+            if (current_time - last_conn_update >= 3.0f || connections.empty()) {
+                connections = getActiveConnections();
+                last_conn_update = current_time;
+            }
+            
+            // Refresh button
+            if (ImGui::Button("Refresh Connections")) {
+                connections = getActiveConnections();
+                last_conn_update = current_time;
+            }
+            
+            ImGui::Spacing();
+            
+            // Display connections in a table
+            if (ImGui::BeginTable("Connections", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                ImGui::TableSetupColumn("Protocol");
+                ImGui::TableSetupColumn("Local Address");
+                ImGui::TableSetupColumn("Remote Address");
+                ImGui::TableSetupColumn("State");
+                ImGui::TableHeadersRow();
+                
+                for (const auto& conn : connections) {
+                    ImGui::TableNextRow();
+                    
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text("%s", conn.protocol.c_str());
+                    
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::Text("%s", conn.local_address.c_str());
+                    
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::Text("%s", conn.remote_address.c_str());
+                    
+                    ImGui::TableSetColumnIndex(3);
+                    if (conn.state == "ESTABLISHED") {
+                        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%s", conn.state.c_str());
+                    } else if (conn.state == "LISTEN") {
+                        ImGui::TextColored(ImVec4(0.0f, 0.0f, 1.0f, 1.0f), "%s", conn.state.c_str());
+                    } else {
+                        ImGui::Text("%s", conn.state.c_str());
+                    }
+                }
+                
+                ImGui::EndTable();
+            }
+            
+            ImGui::EndTabItem();
+        }
+        
+        // Listening Ports Tab
+        if (ImGui::BeginTabItem("Ports")) {
+            ImGui::Text("Listening Ports");
+            
+            // Get listening ports
+            static vector<PortInfo> ports;
+            static float last_port_update = 0.0f;
+            
+            // Update ports every 5 seconds
+            if (current_time - last_port_update >= 5.0f || ports.empty()) {
+                ports = getListeningPorts();
+                last_port_update = current_time;
+            }
+            
+            // Refresh button
+            if (ImGui::Button("Refresh Ports")) {
+                ports = getListeningPorts();
+                last_port_update = current_time;
+            }
+            
+            ImGui::Spacing();
+            
+            // Display ports in a table
+            if (ImGui::BeginTable("Ports", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                ImGui::TableSetupColumn("Port");
+                ImGui::TableSetupColumn("Protocol");
+                ImGui::TableSetupColumn("State");
+                ImGui::TableHeadersRow();
+                
+                for (const auto& port : ports) {
+                    ImGui::TableNextRow();
+                    
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text("%d", port.port);
+                    
+                    ImGui::TableSetColumnIndex(1);
+                    if (port.protocol == "TCP") {
+                        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%s", port.protocol.c_str());
+                    } else {
+                        ImGui::TextColored(ImVec4(0.0f, 0.0f, 1.0f, 1.0f), "%s", port.protocol.c_str());
+                    }
+                    
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::Text("%s", port.state.c_str());
+                }
+                
+                ImGui::EndTable();
+            }
+            
+            ImGui::EndTabItem();
+        }
+        
+        ImGui::EndTabBar();
+    }
+    
     ImGui::End();
 }
 
