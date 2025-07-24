@@ -310,21 +310,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction...
 ```
-
-## 🙏 Acknowledgments
-
-- **Dear ImGui**: Excellent immediate mode GUI library
-- **SDL2**: Cross-platform development library
-- **Linux Kernel**: Comprehensive /proc and /sys filesystem interfaces
-- **OpenGL**: Graphics rendering capabilities
-
-## 📞 Support
-
-For questions, issues, or contributions:
-- **GitHub Issues**: [Create an issue](https://github.com/MauriceOmbewa/system-monitor/issues)
-- **Email**: [Your contact information]
-- **Documentation**: This README and inline code comments
-
----
-
-**Built with ❤️ for Linux system monitoring**
