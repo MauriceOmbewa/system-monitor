@@ -359,3 +359,66 @@ vector<NetworkConnection> getActiveConnections() {
     
     return connections;
 }
+
+// Get listening ports
+vector<PortInfo> getListeningPorts() {
+    vector<PortInfo> ports;
+    
+    // Read TCP listening ports from /proc/net/tcp
+    ifstream tcp_file("/proc/net/tcp");
+    if (tcp_file.is_open()) {
+        string line;
+        getline(tcp_file, line); // Skip header
+        
+        while (getline(tcp_file, line)) {
+            stringstream ss(line);
+            string sl, local_addr, rem_addr, st, tx_queue, rx_queue, tr, tm_when, retrnsmt, uid, timeout, inode;
+            
+            ss >> sl >> local_addr >> rem_addr >> st >> tx_queue >> rx_queue >> tr >> tm_when >> retrnsmt >> uid >> timeout >> inode;
+            
+            // Only interested in LISTEN state (0A in hex = 10 in decimal)
+            int state_num = stoi(st, nullptr, 16);
+            if (state_num == 10) { // LISTEN state
+                PortInfo port;
+                port.protocol = "TCP";
+                port.state = "LISTEN";
+                port.pid = 0;
+                port.process_name = "";
+                
+                // Parse local address to get port
+                if (local_addr.length() >= 9) {
+                    port.port = stoul(local_addr.substr(9), nullptr, 16);
+                    ports.push_back(port);
+                }
+            }
+        }
+    }
+    
+    // Read UDP listening ports from /proc/net/udp
+    ifstream udp_file("/proc/net/udp");
+    if (udp_file.is_open()) {
+        string line;
+        getline(udp_file, line); // Skip header
+        
+        while (getline(udp_file, line)) {
+            stringstream ss(line);
+            string sl, local_addr, rem_addr, st, tx_queue, rx_queue, tr, tm_when, retrnsmt, uid, timeout, inode;
+            
+            ss >> sl >> local_addr >> rem_addr >> st >> tx_queue >> rx_queue >> tr >> tm_when >> retrnsmt >> uid >> timeout >> inode;
+            
+            PortInfo port;
+            port.protocol = "UDP";
+            port.state = "OPEN";
+            port.pid = 0;
+            port.process_name = "";
+            
+            // Parse local address to get port
+            if (local_addr.length() >= 9) {
+                port.port = stoul(local_addr.substr(9), nullptr, 16);
+                ports.push_back(port);
+            }
+        }
+    }
+    
+    return ports;
+}
