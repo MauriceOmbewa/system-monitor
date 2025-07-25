@@ -34,8 +34,8 @@ MemoryInfo getMemoryInfo() {
     // Convert kB to bytes
     info.total_ram = mem_total * 1024;
     info.free_ram = mem_free * 1024;  // Use actual free (not available)
-    // Calculate used memory like 'free' command: total - free - buffers - cached
-    info.used_ram = (mem_total - mem_free - buffers - cached) * 1024;
+    // Calculate used memory like modern 'free' command: total - available
+    info.used_ram = (mem_total - mem_available) * 1024;
     
     info.total_swap = swap_total * 1024;
     info.free_swap = swap_free * 1024;
