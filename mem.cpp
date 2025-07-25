@@ -82,10 +82,13 @@ vector<DiskInfo> getAllDisks() {
         string device, mount_point, fs_type;
         ss >> device >> mount_point >> fs_type;
         
-        // Skip virtual filesystems and duplicates
+        // Skip virtual filesystems, snap mounts, and duplicates
         if (device.find("/dev/") == 0 && 
             fs_type != "tmpfs" && fs_type != "devtmpfs" && 
             fs_type != "sysfs" && fs_type != "proc" &&
+            fs_type != "squashfs" && // Skip snap packages
+            device.find("/dev/loop") != 0 && // Skip loop devices
+            mount_point.find("/snap/") != 0 && // Skip snap mount points
             seen_devices.find(device) == seen_devices.end()) {
             
             DiskInfo info = getDiskInfo(mount_point);
